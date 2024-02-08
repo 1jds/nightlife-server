@@ -5,7 +5,7 @@ const cors = require("cors");
 const app = express();
 app.use(
   cors({
-    origin: "https://nightlifeapp.onrender.com/",
+    origin: "https://nightlifeapp.onrender.com",
   })
 );
 
