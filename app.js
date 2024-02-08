@@ -15,7 +15,7 @@ const API_KEY = process.env.YELP_API_KEY;
 app.get("/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
 
-  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}&sort_by=best_match&limit=10`;
+  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}&sort_by=best_match&limit=5`;
   const options = {
     method: "GET",
     headers: {
