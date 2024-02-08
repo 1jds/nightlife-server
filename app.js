@@ -1,7 +1,14 @@
 const express = require("express");
 const fetch = require("node-fetch");
+const cors = require("cors");
 
 const app = express();
+app.use(
+  cors({
+    origin: "https://nightlifeapp.onrender.com/",
+  })
+);
+
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
 
