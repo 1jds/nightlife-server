@@ -1,6 +1,8 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const cors = require("cors");
+const { Pool } = require("pg");
+const bodyParser = require("body-parser");
 
 const app = express();
 app.use(
@@ -8,9 +10,15 @@ app.use(
     origin: "https://nightlifeapp.onrender.com",
   })
 );
+app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
+
+// Create a PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: "YOUR_ELEPHANTSQL_CONNECTION_STRING",
+});
 
 app.get("/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
