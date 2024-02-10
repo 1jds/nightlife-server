@@ -17,7 +17,20 @@ const API_KEY = process.env.YELP_API_KEY;
 
 // Create a PostgreSQL connection pool
 const pool = new Pool({
-  connectionString: "YOUR_ELEPHANTSQL_CONNECTION_STRING",
+  connectionString: process.env.ELEPHANTSQL_CONNECTION_URL,
+});
+
+// Test the database connection
+pool.connect((err, client, done) => {
+  if (err) {
+    console.error("Error connecting to the database", err);
+  } else {
+    console.log("Connected to the database");
+  }
+});
+
+app.get("/", (req, res) => {
+  res.send("Welcome to the nightlife server!");
 });
 
 app.get("/yelp-data/:location", async (req, res) => {
