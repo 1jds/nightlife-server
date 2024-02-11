@@ -34,6 +34,7 @@ pool.connect((err, client, done) => {
 //
 
 app.post("/users", (req, res) => {
+  console.log("At POST to /users here is the req.body ..... : ", req.body);
   const { username, password } = req.body;
 
   if (!username || !password) {
