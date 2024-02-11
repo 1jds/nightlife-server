@@ -91,7 +91,7 @@ app.put("/users/:id", (req, res) => {
   if (!username || !password) {
     return res
       .status(400)
-      .json({ error: "Both username and HERE are required" });
+      .json({ error: "Both username and password are required" });
   }
 
   pool.query(
