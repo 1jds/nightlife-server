@@ -44,7 +44,7 @@ app.post("/users", (req, res) => {
   }
 
   pool.query(
-    "INSERT INTO users (username, password) VALUES ($1, $2)",
+    "INSERT INTO users (username, password_hash) VALUES ($1, $2)",
     [username, password],
     (err, result) => {
       if (err) {
