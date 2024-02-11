@@ -85,17 +85,17 @@ app.get("/users", (req, res) => {
 
 app.put("/users/:id", (req, res) => {
   const userId = req.params.id;
-  const { username, email } = req.body;
+  const { username, password } = req.body;
 
-  if (!username || !email) {
+  if (!username || !password) {
     return res
       .status(400)
-      .json({ error: "Both username and email are required" });
+      .json({ error: "Both username and HERE are required" });
   }
 
   pool.query(
-    "UPDATE users SET username = $1, email = $2 WHERE id = $3",
-    [username, email, userId],
+    "UPDATE users SET username = $1, password = $2 WHERE id = $3",
+    [username, password, userId],
     (err, result) => {
       if (err) {
         console.error("Error updating user in the database", err);
