@@ -18,6 +18,7 @@ const API_KEY = process.env.YELP_API_KEY;
 // Create a PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.ELEPHANTSQL_CONNECTION_URL,
+  max: 5,
 });
 
 // Test the database connection
@@ -33,17 +34,17 @@ pool.connect((err, client, done) => {
 //
 
 app.post("/users", (req, res) => {
-  const { username, email } = req.body;
+  const { username, password } = req.body;
 
-  if (!username || !email) {
+  if (!username || !password) {
     return res
       .status(400)
-      .json({ error: "Both username and email are required" });
+      .json({ error: "Both username and password are required" });
   }
 
   pool.query(
-    "INSERT INTO users (username, email) VALUES ($1, $2)",
-    [username, email],
+    "INSERT INTO users (username, password) VALUES ($1, $2)",
+    [username, password],
     (err, result) => {
       if (err) {
         console.error("Error inserting user into the database", err);
