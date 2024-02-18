@@ -15,16 +15,17 @@ app.use(
   })
 );
 app.use(bodyParser.json());
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: true,
-    key: "express.sid",
-    store: store,
-    saveUninitialized: true,
-    cookie: { secure: false },
-  })
-);
+// These values need to be updated...
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: true,
+//     key: "express.sid",
+//     store: store,
+//     saveUninitialized: true,
+//     cookie: { secure: false },
+//   })
+// );
 app.use(passport.initialize());
 app.use(passport.session());
 
