@@ -26,8 +26,8 @@ app.use(bodyParser.json());
 //     cookie: { secure: false },
 //   })
 // );
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
