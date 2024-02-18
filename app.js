@@ -1,8 +1,12 @@
 const express = require("express");
+const session = require("express-session");
+const passport = require("passport");
+const bcrypt = require("bcrypt");
 const fetch = require("node-fetch");
 const cors = require("cors");
 const { Pool } = require("pg");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 app.use(
@@ -11,6 +15,18 @@ app.use(
   })
 );
 app.use(bodyParser.json());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    key: "express.sid",
+    store: store,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
@@ -33,8 +49,8 @@ pool.connect((err, client, done) => {
 // Testing CRUD operations
 //
 
-app.post("/users", (req, res) => {
-  console.log("At POST to /users here is the req.body ..... : ", req.body);
+app.post("/register", (req, res) => {
+  console.log("At POST to /register here is the req.body ..... : ", req.body);
   const { username, password } = req.body;
 
   if (!username || !password) {
