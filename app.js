@@ -149,11 +149,13 @@ app.post("/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
   console.log(
     "At POST to /yelp-data/:location here is the req.body ..... : ",
-    req.body
+    req.body // { searchOffset: 0, searchIsOpenNow: false }
   );
-  // const { username, password } = req.body;
+  const { searchOffset, searchIsOpenNow, searchSortBy, searchPrice } = req.body;
 
-  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}&sort_by=best_match&limit=5`;
+  const searchPriceURIencoded = encodeURIComponent(searchPrice);
+
+  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}&price="1,2"&open_now=${searchIsOpenNow}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
   const options = {
     method: "GET",
     headers: {
