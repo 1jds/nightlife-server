@@ -145,8 +145,13 @@ app.get("/", (req, res) => {
   res.send("Welcome to the nightlife server!");
 });
 
-app.get("/yelp-data/:location", async (req, res) => {
+app.post("/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
+  console.log(
+    "At POST to /yelp-data/:location here is the req.body ..... : ",
+    req.body
+  );
+  // const { username, password } = req.body;
 
   const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}&sort_by=best_match&limit=5`;
   const options = {
