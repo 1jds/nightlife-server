@@ -149,7 +149,7 @@ app.post("/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
   console.log(
     "At POST to /yelp-data/:location here is the req.body ..... : ",
-    req.body // { searchOffset: 0, searchIsOpenNow: false }
+    req.body
   );
   const { searchOffset, searchIsOpenNow, searchSortBy, searchPrice } = req.body;
   let updatedSearchPrice;
