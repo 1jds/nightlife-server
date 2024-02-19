@@ -152,9 +152,22 @@ app.post("/yelp-data/:location", async (req, res) => {
     req.body // { searchOffset: 0, searchIsOpenNow: false }
   );
   const { searchOffset, searchIsOpenNow, searchSortBy, searchPrice } = req.body;
-  // const searchPriceURIencoded = encodeURIComponent(searchPrice);
+  let updatedSearchPrice;
+  switch (searchPrice) {
+    case 1:
+      updatedSearchPrice = "&price=1";
+      break;
+    case 2:
+      updatedSearchPrice = "&price=1&price=2";
+      break;
+    case 3:
+      updatedSearchPrice = "&price=1&price=2&price=3";
+      break;
+    default:
+      updatedSearchPrice = "&price=1&price=2&price=3&price=4";
+  }
 
-  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}&price=1&price=2&open_now=${searchIsOpenNow}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
+  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}${updatedSearchPrice}&open_now=${searchIsOpenNow}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
   const options = {
     method: "GET",
     headers: {
