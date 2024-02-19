@@ -152,10 +152,9 @@ app.post("/yelp-data/:location", async (req, res) => {
     req.body // { searchOffset: 0, searchIsOpenNow: false }
   );
   const { searchOffset, searchIsOpenNow, searchSortBy, searchPrice } = req.body;
+  // const searchPriceURIencoded = encodeURIComponent(searchPrice);
 
-  const searchPriceURIencoded = encodeURIComponent(searchPrice);
-
-  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}&price="1,2"&open_now=${searchIsOpenNow}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
+  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}&price=1&price=2&open_now=${searchIsOpenNow}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
   const options = {
     method: "GET",
     headers: {
@@ -163,10 +162,11 @@ app.post("/yelp-data/:location", async (req, res) => {
       Authorization: `Bearer ${API_KEY}`,
     },
   };
-
   try {
     const response = await fetch(url, options);
-
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
     const data = await response.json();
     res.json(data);
   } catch (error) {
