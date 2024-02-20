@@ -61,6 +61,7 @@ passport.use(
       "SELECT * FROM users WHERE username = $1",
       [username],
       (err, result) => {
+        console.log(`User ${username} attempted to log in.`);
         if (err) {
           return done(err);
         }
@@ -129,7 +130,8 @@ app.post(
   "/login",
   passport.authenticate("local", { failureRedirect: "/" }),
   (req, res) => {
-    res.redirect("/"); // What is the point of this redirect???
+    console.log("A successful login occurred.");
+    res.json({ message: "successful login!" });
   }
 );
 
