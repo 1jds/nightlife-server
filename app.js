@@ -133,7 +133,11 @@ app.get("/current-session", (req, res) => {
     if (err || !user) {
       res.json({ currentlyLoggedIn: false });
     } else {
-      res.json({ currentlyLoggedIn: true, loggedInUser: user });
+      res.json({
+        currentlyLoggedIn: true,
+        userId: req.user.user_id,
+        username: req.user.username,
+      });
     }
   })(req, res);
 });
