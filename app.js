@@ -118,6 +118,12 @@ app.use(passport.session());
 // --------------------------------------------- //
 
 app.get("/current-session", (req, res) => {
+  console.log(
+    "Here is the req.session for /current-session......... :",
+    req.session,
+    "Here is the req.session.passport for /current-session......... :",
+    req.session.passport
+  );
   if (req.isAuthenticated()) {
     console.log("Yes, indeed!");
   } else {
