@@ -91,14 +91,6 @@ passport.deserializeUser((id, done) => {
   });
 });
 
-/**
- * This function is called when the `passport.authenticate()` method is called.
- *
- * If a user is found an validated, a callback is called (`cb(null, user)`) with the user
- * object.  The user object is then serialized with `passport.serializeUser()` and added to the
- * `req.session.passport` object.
- */
-
 // --------------------------------------------- //
 // -------------  EXPRESS SESSION  ------------- //
 // --------------------------------------------- //
@@ -126,30 +118,16 @@ app.use(passport.session());
 // --------------------------------------------- //
 
 // Testing CRUD operations
-//
 
-app.get("/current-session", (req, res) => {
-  console.log("Got here... #1");
-  passport.authenticate("local", (err, user) => {
-    console.log("Got here... #2");
-    if (err) {
-      console.log("Got here... #2a");
-    }
-    if (!user) {
-      console.log("Got here... #2b");
-    }
-    if (err || !user) {
-      console.log("Got here... #3");
-      res.json({ currentlyLoggedIn: false });
-    } else {
-      console.log("Got here... #4");
-      res.json({
-        currentlyLoggedIn: true,
-        userId: req.user.user_id,
-        username: req.user.username,
-      });
-    }
-  })(req, res);
+app.get("/current-session", passport.authenticate("local"), (req, res) => {
+  if (!req.user) {
+    res.json({ currentlyLoggedIn: false });
+  }
+  res.json({
+    currentlyLoggedIn: true,
+    userId: req.user.user_id,
+    username: req.user.username,
+  });
 });
 
 app.post("/register", (req, res) => {
