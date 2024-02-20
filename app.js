@@ -54,6 +54,20 @@ app.use(
   })
 );
 
+passport.serializeUser((user, done) => {
+  done(null, user.user_id);
+});
+
+passport.deserializeUser((id, done) => {
+  pool.query("SELECT * FROM users WHERE user_id = $1", [id], (err, result) => {
+    if (err) {
+      return done(err);
+    }
+    const user = result.rows[0];
+    done(null, user);
+  });
+});
+
 passport.use(
   new LocalStrategy((username, password, done) => {
     // Query the PostgreSQL database to find a user by username
