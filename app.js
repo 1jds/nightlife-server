@@ -64,18 +64,15 @@ passport.use(
         if (err) {
           return done(err);
         }
-
         // Check if the user exists
         const user = result.rows[0];
         if (!user) {
           return done(null, false);
         }
-
         // Check if the password is correct
         if (!bcrypt.compareSync(password, user.password_hash)) {
           return done(null, false);
         }
-
         // If the username and password are correct, return the user
         return done(null, user);
       }
