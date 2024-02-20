@@ -117,14 +117,13 @@ app.use(passport.session());
 // -----------------  ROUTING  ----------------- //
 // --------------------------------------------- //
 
-app.get("/current-session", passport.authenticate("session"), (req, res) => {
-  // is the passport.authenticate("session") redundant?
-  console.log(
-    "here is the req for /current-session............ ",
-    req,
-    "is there a req.user? .........",
-    req.user
-  );
+app.get("/current-session", (req, res) => {
+  if (req.isAuthenticated()) {
+    console.log("Yes, indeed!");
+  } else {
+    console.log("No, not at all!");
+  }
+
   if (!req.user) {
     res.json({ currentlyLoggedIn: false });
   }
