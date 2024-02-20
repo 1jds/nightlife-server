@@ -188,8 +188,12 @@ app.post(
 );
 
 app.get("/logout", (req, res) => {
-  req.logout();
-  res.json({ logoutSuccessful: true });
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    res.json({ logoutSuccessful: true });
+  });
 });
 
 app.get("/users", (req, res) => {
