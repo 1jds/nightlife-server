@@ -187,6 +187,11 @@ app.post(
   }
 );
 
+app.get("/logout", (req, res) => {
+  req.logout();
+  res.json({ logoutSuccessful: true });
+});
+
 app.get("/users", (req, res) => {
   // Use COUNT() to get the total number of users
   pool.query(
