@@ -103,7 +103,7 @@ app.use(
     }),
     secret: process.env.EXPRESS_SESSION_SECRET_KEY,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
     },
