@@ -128,6 +128,16 @@ app.use(passport.session());
 // Testing CRUD operations
 //
 
+app.get("/current-session", (req, res) => {
+  passport.authenticate("local", (err, user) => {
+    if (err || !user) {
+      res.json({ currentlyLoggedIn: false });
+    } else {
+      res.json({ currentlyLoggedIn: true, loggedInUser: user });
+    }
+  })(req, res);
+});
+
 app.post("/register", (req, res) => {
   console.log("At POST to /register here is the req.body ..... : ", req.body);
   const { username, password } = req.body;
