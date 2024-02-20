@@ -129,10 +129,14 @@ app.use(passport.session());
 //
 
 app.get("/current-session", (req, res) => {
+  console.log("Got here... #1");
   passport.authenticate("local", (err, user) => {
+    console.log("Got here... #2");
     if (err || !user) {
+      console.log("Got here... #3");
       res.json({ currentlyLoggedIn: false });
     } else {
+      console.log("Got here... #4");
       res.json({
         currentlyLoggedIn: true,
         userId: req.user.user_id,
@@ -185,14 +189,6 @@ app.post(
   passport.authenticate("local", { failureRedirect: "/" }),
   (req, res) => {
     console.log("A successful login occurred.");
-    console.log(
-      "Here is the req object... :",
-      req,
-      "And here is the req.body... :",
-      req.body,
-      "And the req.user if available... :",
-      req?.user
-    );
     res.json({
       loginSuccessful: true,
       userId: req.user.user_id,
