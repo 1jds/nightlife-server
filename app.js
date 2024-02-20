@@ -179,7 +179,11 @@ app.post(
       "And the req.user if available... :",
       req?.user
     );
-    res.json({ message: "successful login!" });
+    res.json({
+      loginSuccessful: true,
+      userId: req.user.user_id,
+      username: req.user.username,
+    });
   }
 );
 
