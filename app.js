@@ -72,7 +72,7 @@ passport.use(
         }
 
         // Check if the password is correct
-        if (!bcrypt.compareSync(password, user.password)) {
+        if (!bcrypt.compareSync(password, user.password_hash)) {
           return done(null, false);
         }
 
@@ -127,6 +127,14 @@ app.post("/register", (req, res) => {
     }
   );
 });
+
+app.post(
+  "/login",
+  passport.authenticate("local", { failureRedirect: "/" }),
+  (req, res) => {
+    res.redirect("/"); // What is the point of this redirect???
+  }
+);
 
 app.get("/users", (req, res) => {
   // Use COUNT() to get the total number of users
