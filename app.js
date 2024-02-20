@@ -118,6 +118,13 @@ app.use(passport.session());
 // --------------------------------------------- //
 
 app.get("/current-session", passport.authenticate("session"), (req, res) => {
+  // is the passport.authenticate("session") redundant?
+  console.log(
+    "here is the req for /current-session............ ",
+    req,
+    "is there a req.user? .........",
+    req.user
+  );
   if (!req.user) {
     res.json({ currentlyLoggedIn: false });
   }
