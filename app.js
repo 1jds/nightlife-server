@@ -132,6 +132,12 @@ app.get("/current-session", (req, res) => {
   console.log("Got here... #1");
   passport.authenticate("local", (err, user) => {
     console.log("Got here... #2");
+    if (err) {
+      console.log("Got here... #2a");
+    }
+    if (!user) {
+      console.log("Got here... #2b");
+    }
     if (err || !user) {
       console.log("Got here... #3");
       res.json({ currentlyLoggedIn: false });
