@@ -12,9 +12,24 @@ const { Pool } = require("pg");
 const pgSession = require("connect-pg-simple")(session);
 const cookieParser = require("cookie-parser");
 
+// --------------------------------------------- //
+// -------------  GENERAL SETUP  --------------- //
+// --------------------------------------------- //
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
+app.use(
+  cors({
+    origin: "https://nightlifeapp.onrender.com",
+  })
+);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Probably won't use this, bust just in case...
+
+// --------------------------------------------- //
+// -----------  DATABASE CONNECTION  ----------- //
+// --------------------------------------------- //
 
 // Create a PostgreSQL connection pool
 const pool = new Pool({
@@ -31,42 +46,9 @@ pool.connect((err, client, done) => {
   }
 });
 
-app.use(
-  cors({
-    origin: "https://nightlifeapp.onrender.com",
-  })
-);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Probably won't use this, bust just in case...
-
-app.use(
-  session({
-    store: new pgSession({
-      pool,
-      tableName: "session", // Name of the session table in PostgreSQL
-    }),
-    secret: process.env.EXPRESS_SESSION_SECRET_KEY,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
-    },
-  })
-);
-
-passport.serializeUser((user, done) => {
-  done(null, user.user_id);
-});
-
-passport.deserializeUser((id, done) => {
-  pool.query("SELECT * FROM users WHERE user_id = $1", [id], (err, result) => {
-    if (err) {
-      return done(err);
-    }
-    const user = result.rows[0];
-    done(null, user);
-  });
-});
+// --------------------------------------------- //
+// -----------  PASSPORT STRATEGIES  ----------- //
+// --------------------------------------------- //
 
 passport.use(
   new LocalStrategy((username, password, done) => {
@@ -95,8 +77,53 @@ passport.use(
   })
 );
 
+passport.serializeUser((user, done) => {
+  done(null, user.user_id);
+});
+
+passport.deserializeUser((id, done) => {
+  pool.query("SELECT * FROM users WHERE user_id = $1", [id], (err, result) => {
+    if (err) {
+      return done(err);
+    }
+    const user = result.rows[0];
+    done(null, user);
+  });
+});
+
+/**
+ * This function is called when the `passport.authenticate()` method is called.
+ *
+ * If a user is found an validated, a callback is called (`cb(null, user)`) with the user
+ * object.  The user object is then serialized with `passport.serializeUser()` and added to the
+ * `req.session.passport` object.
+ */
+
+// --------------------------------------------- //
+// -------------  EXPRESS SESSION  ------------- //
+// --------------------------------------------- //
+
+app.use(
+  session({
+    store: new pgSession({
+      pool,
+      tableName: "session", // Name of the session table in PostgreSQL
+    }),
+    secret: process.env.EXPRESS_SESSION_SECRET_KEY,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
+    },
+  })
+);
+
 app.use(passport.initialize());
 app.use(passport.session());
+
+// --------------------------------------------- //
+// -----------------  ROUTING  ----------------- //
+// --------------------------------------------- //
 
 // Testing CRUD operations
 //
@@ -125,7 +152,6 @@ app.post("/register", (req, res) => {
   );
 
   const hashed_password = bcrypt.hashSync(password, 12);
-
   pool.query(
     "INSERT INTO users (username, password_hash) VALUES ($1, $2)",
     [username, hashed_password],
@@ -145,6 +171,14 @@ app.post(
   passport.authenticate("local", { failureRedirect: "/" }),
   (req, res) => {
     console.log("A successful login occurred.");
+    console.log(
+      "Here is the req object... :",
+      req,
+      "And here is the req.body... :",
+      req.body,
+      "And the req.user if available... :",
+      req?.user
+    );
     res.json({ message: "successful login!" });
   }
 );
@@ -263,6 +297,10 @@ app.post("/yelp-data/:location", async (req, res) => {
   }
   return;
 });
+
+// --------------------------------------------- //
+// ------------------  SERVER  ----------------- //
+// --------------------------------------------- //
 
 const server = app.listen(PORT, () =>
   console.log(`Server is listening on port ${PORT}`)
