@@ -1,34 +1,18 @@
 const express = require("express");
 const session = require("express-session");
 const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const GitHubStrategy = require("passport-github2").Strategy;
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const AppleStrategy = require("passport-apple").Strategy;
 const bcrypt = require("bcrypt");
 const fetch = require("node-fetch");
 const cors = require("cors");
 const { Pool } = require("pg");
-const bodyParser = require("body-parser");
+const pgSession = require("connect-pg-simple")(session);
 const cookieParser = require("cookie-parser");
 
 const app = express();
-app.use(
-  cors({
-    origin: "https://nightlifeapp.onrender.com",
-  })
-);
-app.use(bodyParser.json());
-// These values need to be updated...
-// app.use(
-//   session({
-//     secret: process.env.SESSION_SECRET,
-//     resave: true,
-//     key: "express.sid",
-//     store: store,
-//     saveUninitialized: true,
-//     cookie: { secure: false },
-//   })
-// );
-// app.use(passport.initialize());
-// app.use(passport.session());
-
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
 
@@ -47,22 +31,94 @@ pool.connect((err, client, done) => {
   }
 });
 
+app.use(
+  cors({
+    origin: "https://nightlifeapp.onrender.com",
+  })
+);
+app.use(express.json());
+app.use();
+app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true })); // Probably won't use this, bust just in case...
+
+app.use(
+  session({
+    store: new pgSession({
+      pool,
+      tableName: "session", // Name of the session table in PostgreSQL
+    }),
+    secret: process.env.EXPRESS_SESSION_SECRET_KEY,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
+    },
+  })
+);
+
+passport.use(
+  new LocalStrategy((username, password, done) => {
+    // Query the PostgreSQL database to find a user by username
+    pool.query(
+      "SELECT * FROM users WHERE username = $1",
+      [username],
+      (err, result) => {
+        if (err) {
+          return done(err);
+        }
+
+        // Check if the user exists
+        const user = result.rows[0];
+        if (!user) {
+          return done(null, false);
+        }
+
+        // Check if the password is correct
+        if (!bcrypt.compareSync(password, user.password)) {
+          return done(null, false);
+        }
+
+        // If the username and password are correct, return the user
+        return done(null, user);
+      }
+    );
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Testing CRUD operations
 //
 
 app.post("/register", (req, res) => {
   console.log("At POST to /register here is the req.body ..... : ", req.body);
   const { username, password } = req.body;
-
   if (!username || !password) {
     return res
       .status(400)
       .json({ error: "Both username and password are required" });
   }
+  pool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [username],
+    (err, result) => {
+      if (err) {
+        return done(err);
+      }
+
+      const user = result.rows[0];
+      if (user) {
+        return res.json({ error: "Please select another username" });
+      }
+    }
+  );
+
+  const hashed_password = bcrypt.hashSync(password, 12);
 
   pool.query(
     "INSERT INTO users (username, password_hash) VALUES ($1, $2)",
-    [username, password],
+    [username, hashed_password],
     (err, result) => {
       if (err) {
         console.error("Error inserting user into the database", err);
