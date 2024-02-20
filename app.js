@@ -87,7 +87,7 @@ passport.deserializeUser((id, done) => {
       return done(err);
     }
     const user = result.rows[0];
-    done(null, user);
+    return done(null, user);
   });
 });
 
@@ -125,9 +125,9 @@ app.get("/current-session", (req, res) => {
     req.session.passport
   );
   if (req.isAuthenticated()) {
-    console.log("Yes, indeed!");
+    console.log("At GET /current-session... Yes, indeed!");
   } else {
-    console.log("No, not at all!");
+    console.log("At GET /current-session... No, not at all!");
   }
 
   if (!req.user) {
@@ -170,9 +170,9 @@ app.post("/register", (req, res) => {
     (err, result) => {
       if (err) {
         console.error("Error inserting user into the database", err);
-        res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ error: "Internal server error" });
       } else {
-        res.status(201).json({ message: "User created successfully" });
+        return res.status(201).json({ message: "User created successfully" });
       }
     }
   );
@@ -180,10 +180,17 @@ app.post("/register", (req, res) => {
 
 app.post(
   "/login",
-  passport.authenticate("local", { failureRedirect: "/" }),
+  passport.authenticate("local", { failureRedirect: "/failed" }),
   (req, res) => {
     console.log("A successful login occurred.");
-    res.json({
+
+    if (req.isAuthenticated()) {
+      console.log("At POST /login... Yes, indeed!");
+    } else {
+      console.log("At POST /login... No, not at all!");
+    }
+
+    return res.json({
       loginSuccessful: true,
       userId: req.user.user_id,
       username: req.user.username,
@@ -192,6 +199,12 @@ app.post(
 );
 
 app.get("/logout", (req, res) => {
+  if (req.isAuthenticated()) {
+    console.log("At GET /logout... Yes, indeed!");
+  } else {
+    console.log("At GET /logout... No, not at all!");
+  }
+
   req.logout((err) => {
     if (err) {
       return next(err);
@@ -201,6 +214,12 @@ app.get("/logout", (req, res) => {
 });
 
 app.get("/users", (req, res) => {
+  if (req.isAuthenticated()) {
+    console.log("At GET /users... Yes, indeed!");
+  } else {
+    console.log("At GET /users... No, not at all!");
+  }
+
   // Use COUNT() to get the total number of users
   pool.query(
     "SELECT COUNT(*) as total_users FROM users; SELECT * FROM users;",
@@ -221,7 +240,7 @@ app.get("/users", (req, res) => {
           users: users,
         };
 
-        res.json(response);
+        return res.json(response);
       }
     }
   );
