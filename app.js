@@ -117,9 +117,7 @@ app.use(passport.session());
 // -----------------  ROUTING  ----------------- //
 // --------------------------------------------- //
 
-// Testing CRUD operations
-
-app.get("/current-session", passport.authenticate("local"), (req, res) => {
+app.get("/current-session", passport.authenticate("session"), (req, res) => {
   if (!req.user) {
     res.json({ currentlyLoggedIn: false });
   }
