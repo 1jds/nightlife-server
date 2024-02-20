@@ -37,8 +37,6 @@ app.use(
   })
 );
 app.use(express.json());
-app.use();
-app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true })); // Probably won't use this, bust just in case...
 
 app.use(
