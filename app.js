@@ -10,7 +10,7 @@ const fetch = require("node-fetch");
 const cors = require("cors");
 const { Pool } = require("pg");
 const pgSession = require("connect-pg-simple")(session);
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
 
 // --------------------------------------------- //
 // -------------  GENERAL SETUP  --------------- //
@@ -28,7 +28,7 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Probably won't use this, bust just in case...
-app.use(cookieParser());
+// app.use(cookieParser());
 
 // --------------------------------------------- //
 // -----------  DATABASE CONNECTION  ----------- //
@@ -80,7 +80,8 @@ passport.use(
         }
         // If the username and password are correct, return the user
         console.log(
-          "In the local strategy middleware, and everything looks good..."
+          "In the local strategy middleware, and everything looks good... Here is the user that we're passing on.... :",
+          user
         );
         return done(null, user);
       }
@@ -122,12 +123,12 @@ app.use(
       tableName: "session", // Name of the session table in PostgreSQL
     }),
     secret: process.env.EXPRESS_SESSION_SECRET_KEY,
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
-      domain: "https://nightlifeapp.onrender.com",
-      secure: false,
+      domain: "https://nightlifeapp.onrender.com", // delete?
+      secure: false, // delete?
     },
   })
 );
