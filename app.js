@@ -102,9 +102,11 @@ passport.use(
 // });
 
 passport.serializeUser((user, done) => {
+  console.log(".......... serializeUser was invoked .............");
   done(null, user);
 });
 passport.deserializeUser((user, done) => {
+  console.log(".......... DE deserializeUser was invoked .............");
   done(null, user);
 });
 
