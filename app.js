@@ -1,13 +1,14 @@
 const express = require("express");
 const session = require("express-session");
 const passport = require("passport");
-const LocalStrategy = require("passport-local");
+const LocalStrategy = require("passport-local").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const AppleStrategy = require("passport-apple").Strategy;
 const bcrypt = require("bcrypt");
 const fetch = require("node-fetch");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const { Pool } = require("pg");
 const pgSession = require("connect-pg-simple")(session);
 // const cookieParser = require("cookie-parser");
@@ -27,8 +28,8 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Probably won't use this, bust just in case...
-// app.use(cookieParser());
+app.use(express.urlencoded({ extended: false })); // Probably won't use this, bust just in case...
+app.use(cookieParser());
 
 // --------------------------------------------- //
 // -----------  DATABASE CONNECTION  ----------- //
