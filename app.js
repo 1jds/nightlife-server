@@ -128,7 +128,7 @@ app.use(
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
       domain: "https://nightlifeapp.onrender.com", // delete?
-      secure: false, // delete?
+      secure: true, // delete?
     },
   })
 );
