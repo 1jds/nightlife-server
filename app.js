@@ -214,11 +214,15 @@ app.post(
     } else {
       console.log("At POST /login... No, not at all!");
     }
-
-    return res.json({
-      loginSuccessful: true,
-      userId: req.user.user_id,
-      username: req.user.username,
+    req.login(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+      return res.json({
+        loginSuccessful: true,
+        userId: req.user.user_id,
+        username: req.user.username,
+      });
     });
   }
 );
