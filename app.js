@@ -51,6 +51,7 @@ pool.connect((err, client, done) => {
 // --------------------------------------------- //
 
 passport.use(
+  "local",
   new LocalStrategy((username, password, done) => {
     // Query the PostgreSQL database to find a user by username
     pool.query(
@@ -124,7 +125,7 @@ app.use(passport.session());
 // -----------------  ROUTING  ----------------- //
 // --------------------------------------------- //
 
-app.get("/current-session", (req, res) => {
+app.get("/current-session", passport.authenticate("session"), (req, res) => {
   // console.log(
   //   "Here is the req.session for /current-session......... :",
   //   req.session,
@@ -139,17 +140,13 @@ app.get("/current-session", (req, res) => {
 
   if (!req.user) {
     res.json({ currentlyLoggedIn: false });
+  } else {
+    res.json({
+      currentlyLoggedIn: true,
+      userId: req.user.user_id,
+      username: req.user.username,
+    });
   }
-  // res.json({
-  //   currentlyLoggedIn: true,
-  //   userId: req.user.user_id,
-  //   username: req.user.username,
-  // });
-  res.json({
-    currentlyLoggedIn: true,
-    userId: 555555555,
-    username: "Test Bob",
-  });
 });
 
 app.post("/register", (req, res) => {
@@ -220,8 +217,9 @@ app.get("/logout", (req, res) => {
   req.logout((err) => {
     if (err) {
       return next(err);
+    } else {
+      res.json({ logoutSuccessful: true });
     }
-    res.json({ logoutSuccessful: true });
   });
 });
 
