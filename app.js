@@ -126,6 +126,7 @@ app.use(
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
       domain: "https://nightlifeapp.onrender.com",
+      secure: false,
     },
   })
 );
@@ -214,15 +215,11 @@ app.post(
     } else {
       console.log("At POST /login... No, not at all!");
     }
-    req.login(user, function (err) {
-      if (err) {
-        return next(err);
-      }
-      return res.json({
-        loginSuccessful: true,
-        userId: req.user.user_id,
-        username: req.user.username,
-      });
+
+    return res.json({
+      loginSuccessful: true,
+      userId: req.user.user_id,
+      username: req.user.username,
     });
   }
 );
