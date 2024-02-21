@@ -26,15 +26,6 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Probably won't use this, bust just in case...
-app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    "https://nightlifeapp.onrender.com"
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
-  next();
-});
 
 // --------------------------------------------- //
 // -----------  DATABASE CONNECTION  ----------- //
@@ -98,6 +89,16 @@ passport.deserializeUser((id, done) => {
     const user = result.rows[0];
     return done(null, user);
   });
+});
+
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://nightlifeapp.onrender.com"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
 });
 
 // --------------------------------------------- //
