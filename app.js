@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
 app.use(
   cors({
-    origin: "https://nightlife-six.vercel.app/", // "http://localhost:5173", // "https://nightlifeapp.onrender.com",
+    origin: "https://nightlife-six.vercel.app", // "http://localhost:5173", // "https://nightlifeapp.onrender.com",
     credentials: true,
     "Access-Control-Allow-Credentials": true,
   })
