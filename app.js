@@ -77,28 +77,25 @@ passport.use(
   })
 );
 
+// passport.serializeUser((user, done) => {
+//   done(null, user.user_id);
+// });
+
+// passport.deserializeUser((id, done) => {
+//   pool.query("SELECT * FROM users WHERE user_id = $1", [id], (err, result) => {
+//     if (err) {
+//       return done(err);
+//     }
+//     const user = result.rows[0];
+//     return done(null, user);
+//   });
+// });
+
 passport.serializeUser((user, done) => {
-  done(null, user.user_id);
+  done(null, user);
 });
-
-passport.deserializeUser((id, done) => {
-  pool.query("SELECT * FROM users WHERE user_id = $1", [id], (err, result) => {
-    if (err) {
-      return done(err);
-    }
-    const user = result.rows[0];
-    return done(null, user);
-  });
-});
-
-app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    "https://nightlifeapp.onrender.com"
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
-  next();
+passport.deserializeUser((user, done) => {
+  done(null, user);
 });
 
 // --------------------------------------------- //
