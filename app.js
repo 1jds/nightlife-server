@@ -37,7 +37,7 @@ app.use(cookieParser());
 
 // Create a PostgreSQL connection pool
 const pool = new Pool({
-  connectionString: `${process.env.ELEPHANTSQL_CONNECTION_URL}`,
+  connectionString: process.env.ELEPHANTSQL_CONNECTION_URL,
   max: 5,
 });
 
@@ -124,8 +124,8 @@ app.use(
       tableName: "session", // Name of the session table in PostgreSQL
     }),
     secret: process.env.EXPRESS_SESSION_SECRET_KEY,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
       // domain: "https://nightlifeapp.onrender.com", // delete?
