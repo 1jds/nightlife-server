@@ -22,6 +22,8 @@ const API_KEY = process.env.YELP_API_KEY;
 app.use(
   cors({
     origin: "https://nightlifeapp.onrender.com",
+    credentials: true,
+    "Access-Control-Allow-Credentials": true,
   })
 );
 app.use(express.json());
