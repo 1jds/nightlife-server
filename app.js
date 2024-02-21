@@ -11,7 +11,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { Pool } = require("pg");
 const pgSession = require("connect-pg-simple")(session);
-// const cookieParser = require("cookie-parser");
+require("dotenv").config();
 
 // --------------------------------------------- //
 // -------------  GENERAL SETUP  --------------- //
@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
 app.use(
   cors({
-    origin: "https://nightlifeapp.onrender.com",
+    origin: "https://nightlifeapp.onrender.com", // "http://localhost:5173",
     credentials: true,
     "Access-Control-Allow-Credentials": true,
   })
@@ -37,7 +37,7 @@ app.use(cookieParser());
 
 // Create a PostgreSQL connection pool
 const pool = new Pool({
-  connectionString: process.env.ELEPHANTSQL_CONNECTION_URL,
+  connectionString: `${process.env.ELEPHANTSQL_CONNECTION_URL}`,
   max: 5,
 });
 
@@ -128,8 +128,8 @@ app.use(
     saveUninitialized: true,
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
-      domain: "https://nightlifeapp.onrender.com", // delete?
-      secure: true, // delete?
+      // domain: "https://nightlifeapp.onrender.com", // delete?
+      // secure: true, // delete?
     },
   })
 );
@@ -169,79 +169,75 @@ app.get("/current-session", passport.authenticate("session"), (req, res) => {
   }
 });
 
-// app.post("/register", (req, res) => {
-//   console.log("At POST to /register here is the req.body ..... : ", req.body);
-//   const { username, password } = req.body;
-//   if (!username || !password) {
-//     return res
-//       .status(400)
-//       .json({ error: "Both username and password are required" });
-//   }
-//   pool.query(
-//     "SELECT * FROM users WHERE username = $1",
-//     [username],
-//     (err, result) => {
-//       if (err) {
-//         return done(err);
-//       }
-
-//       const user = result.rows[0];
-//       if (user) {
-//         return res.json({ error: "Please select another username" });
-//       }
-//     }
-//   );
-
-//   const hashed_password = bcrypt.hashSync(password, 12);
-//   pool.query(
-//     "INSERT INTO users (username, password_hash) VALUES ($1, $2)",
-//     [username, hashed_password],
-//     (err, result) => {
-//       if (err) {
-//         console.error("Error inserting user into the database", err);
-//         return res.status(500).json({ error: "Internal server error" });
-//       } else {
-//         return res.status(201).json({ message: "User created successfully" });
-//       }
-//     }
-//   );
-// });
-
-app.post(
-  "/login",
-  passport.authenticate("local", { failureRedirect: "/failed" }),
-  (req, res) => {
-    console.log("A successful login occurred.");
-
-    if (req.isAuthenticated()) {
-      console.log("At POST /login... Yes, indeed!");
-    } else {
-      console.log("At POST /login... No, not at all!");
-    }
-
-    return res.json({
-      loginSuccessful: true,
-      userId: req.user.user_id,
-      username: req.user.username,
-    });
+app.post("/register", (req, res) => {
+  console.log("At POST to /register here is the req.body ..... : ", req.body);
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res
+      .status(400)
+      .json({ error: "Both username and password are required" });
   }
-);
+  pool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [username],
+    (err, result) => {
+      if (err) {
+        return done(err);
+      }
 
-// app.get("/logout", (req, res) => {
-//   if (req.isAuthenticated()) {
-//     console.log("At GET /logout... Yes, indeed!");
-//   } else {
-//     console.log("At GET /logout... No, not at all!");
-//   }
+      const user = result.rows[0];
+      if (user) {
+        return res.json({ error: "Please select another username" });
+      }
+    }
+  );
 
-//   req.logout((err) => {
-//     if (err) {
-//       return next(err);
-//     } else {
-//       res.json({ logoutSuccessful: true });
-//     }
-//   });
-// });
+  const hashed_password = bcrypt.hashSync(password, 12);
+  pool.query(
+    "INSERT INTO users (username, password_hash) VALUES ($1, $2)",
+    [username, hashed_password],
+    (err, result) => {
+      if (err) {
+        console.error("Error inserting user into the database", err);
+        return res.status(500).json({ error: "Internal server error" });
+      } else {
+        return res.status(201).json({ message: "User created successfully" });
+      }
+    }
+  );
+});
+
+app.post("/login", passport.authenticate("local"), (req, res) => {
+  console.log("A successful login occurred.");
+
+  if (req.isAuthenticated()) {
+    console.log("At POST /login... Yes, indeed!");
+  } else {
+    console.log("At POST /login... No, not at all!");
+  }
+
+  return res.json({
+    loginSuccessful: true,
+    userId: req.user.user_id,
+    username: req.user.username,
+  });
+});
+
+app.get("/logout", (req, res) => {
+  if (req.isAuthenticated()) {
+    console.log("At GET /logout... Yes, indeed!");
+  } else {
+    console.log("At GET /logout... No, not at all!");
+  }
+
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    } else {
+      res.json({ logoutSuccessful: true });
+    }
+  });
+});
 
 // app.get("/users", (req, res) => {
 //   if (req.isAuthenticated()) {
@@ -313,49 +309,49 @@ app.post(
 //   });
 // });
 
-// app.post("/yelp-data/:location", async (req, res) => {
-//   let locationSearchTerm = req.params.location;
-//   console.log(
-//     "At POST to /yelp-data/:location here is the req.body ..... : ",
-//     req.body
-//   );
-//   const { searchOffset, searchIsOpenNow, searchSortBy, searchPrice } = req.body;
-//   let updatedSearchPrice;
-//   switch (searchPrice) {
-//     case 1:
-//       updatedSearchPrice = "&price=1";
-//       break;
-//     case 2:
-//       updatedSearchPrice = "&price=1&price=2";
-//       break;
-//     case 3:
-//       updatedSearchPrice = "&price=1&price=2&price=3";
-//       break;
-//     default:
-//       updatedSearchPrice = "&price=1&price=2&price=3&price=4";
-//   }
+app.post("/yelp-data/:location", async (req, res) => {
+  let locationSearchTerm = req.params.location;
+  console.log(
+    "At POST to /yelp-data/:location here is the req.body ..... : ",
+    req.body
+  );
+  const { searchOffset, searchIsOpenNow, searchSortBy, searchPrice } = req.body;
+  let updatedSearchPrice;
+  switch (searchPrice) {
+    case 1:
+      updatedSearchPrice = "&price=1";
+      break;
+    case 2:
+      updatedSearchPrice = "&price=1&price=2";
+      break;
+    case 3:
+      updatedSearchPrice = "&price=1&price=2&price=3";
+      break;
+    default:
+      updatedSearchPrice = "&price=1&price=2&price=3&price=4";
+  }
 
-//   const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}${updatedSearchPrice}&open_now=${searchIsOpenNow}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
-//   const options = {
-//     method: "GET",
-//     headers: {
-//       accept: "application/json",
-//       Authorization: `Bearer ${API_KEY}`,
-//     },
-//   };
-//   try {
-//     const response = await fetch(url, options);
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! Status: ${response.status}`);
-//     }
-//     const data = await response.json();
-//     res.json(data);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-//   return;
-// });
+  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}${updatedSearchPrice}&open_now=${searchIsOpenNow}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
+  const options = {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+    },
+  };
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+  return;
+});
 
 // --------------------------------------------- //
 // ------------------  SERVER  ----------------- //
