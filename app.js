@@ -1,7 +1,11 @@
 const express = require("express");
+const path = require("path");
+const fs = require("fs");
 const session = require("express-session");
 const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
+// const LocalStrategy = require("passport-local").Strategy;
+const JwtStrategy = require("passport-jwt").Strategy;
+const ExtractJwt = require("passport-jwt").ExtractJwt;
 const GitHubStrategy = require("passport-github2").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const AppleStrategy = require("passport-apple").Strategy;
@@ -11,11 +15,11 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { Pool } = require("pg");
 const pgSession = require("connect-pg-simple")(session);
-require("dotenv").config();
 
 // --------------------------------------------- //
 // -------------  GENERAL SETUP  --------------- //
 // --------------------------------------------- //
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,7 +33,9 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Probably won't use this, bust just in case...
-app.use(cookieParser());
+app.use(cookieParser()); // maybe don't need for JWT
+
+app.use(express.static("dist"));
 
 // --------------------------------------------- //
 // -----------  DATABASE CONNECTION  ----------- //
@@ -54,34 +60,42 @@ pool.connect((err, client, done) => {
 // -----------  PASSPORT STRATEGIES  ----------- //
 // --------------------------------------------- //
 
+const options = {
+  // options for JWT Strategy
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: "dummy test key",
+  // algorithms: ["RS256"],
+};
+
 passport.use(
-  "local",
-  new LocalStrategy((username, password, done) => {
+  new JwtStrategy(options, (jwt_payload, done) => {
+    console.log(jwt_payload);
+
     // Query the PostgreSQL database to find a user by username
     pool.query(
       "SELECT * FROM users WHERE username = $1",
-      [username],
+      [jwt_payload.username],
       (err, result) => {
-        console.log(`User ${username} attempted to log in.`);
+        console.log(`User ${jwt_payload.username} attempted to log in.`);
         if (err) {
           return done(err);
         }
         // Check if the user exists
         const user = result.rows[0];
         console.log(
-          "The user details while authenticating local strategy are... :",
+          "The user details while authenticating jwt strategy are... :",
           user
         );
         if (!user) {
           return done(null, false);
         }
         // Check if the password is correct
-        if (!bcrypt.compareSync(password, user.password_hash)) {
+        if (!bcrypt.compareSync(jwt_payload.password, user.password_hash)) {
           return done(null, false);
         }
         // If the username and password are correct, return the user
         console.log(
-          "In the local strategy middleware, and everything looks good... Here is the user that we're passing on.... :",
+          "In the jwt strategy middleware, and everything looks good... Here is the user that we're passing on.... :",
           user
         );
         return done(null, user);
@@ -89,6 +103,41 @@ passport.use(
     );
   })
 );
+// passport.use(
+//   "local",
+//   new LocalStrategy((username, password, done) => {
+//     // Query the PostgreSQL database to find a user by username
+//     pool.query(
+//       "SELECT * FROM users WHERE username = $1",
+//       [username],
+//       (err, result) => {
+//         console.log(`User ${username} attempted to log in.`);
+//         if (err) {
+//           return done(err);
+//         }
+//         // Check if the user exists
+//         const user = result.rows[0];
+//         console.log(
+//           "The user details while authenticating local strategy are... :",
+//           user
+//         );
+//         if (!user) {
+//           return done(null, false);
+//         }
+//         // Check if the password is correct
+//         if (!bcrypt.compareSync(password, user.password_hash)) {
+//           return done(null, false);
+//         }
+//         // If the username and password are correct, return the user
+//         console.log(
+//           "In the local strategy middleware, and everything looks good... Here is the user that we're passing on.... :",
+//           user
+//         );
+//         return done(null, user);
+//       }
+//     );
+//   })
+// );
 
 // passport.serializeUser((user, done) => {
 //   done(null, user.user_id);
@@ -141,9 +190,9 @@ app.use(passport.session());
 // -----------------  ROUTING  ----------------- //
 // --------------------------------------------- //
 
-app.get("/", (req, res) => {
-  res.send("Welcome to the nightlife server!");
-});
+// app.get("/", (req, res) => {
+//   res.send("Welcome to the nightlife server!");
+// });
 
 app.get("/current-session", passport.authenticate("session"), (req, res) => {
   // console.log(
