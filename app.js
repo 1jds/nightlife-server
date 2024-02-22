@@ -195,31 +195,35 @@ app.use(passport.session());
 //   res.send("Welcome to the nightlife server!");
 // });
 
-app.get("/current-session", passport.authenticate("session"), (req, res) => {
-  // console.log(
-  //   "Here is the req.session for /current-session......... :",
-  //   req.session,
-  //   "Here is the req.session.passport for /current-session......... :",
-  //   req.session.passport
-  // );
-  if (req.isAuthenticated()) {
-    console.log("At GET /current-session... Yes, indeed!");
-  } else {
-    console.log("At GET /current-session... No, not at all!");
-  }
+app.get(
+  "/api/current-session",
+  passport.authenticate("session"),
+  (req, res) => {
+    // console.log(
+    //   "Here is the req.session for /current-session......... :",
+    //   req.session,
+    //   "Here is the req.session.passport for /current-session......... :",
+    //   req.session.passport
+    // );
+    if (req.isAuthenticated()) {
+      console.log("At GET /current-session... Yes, indeed!");
+    } else {
+      console.log("At GET /current-session... No, not at all!");
+    }
 
-  if (!req.user) {
-    res.json({ currentlyLoggedIn: false });
-  } else {
-    res.json({
-      currentlyLoggedIn: true,
-      userId: req.user.user_id,
-      username: req.user.username,
-    });
+    if (!req.user) {
+      res.json({ currentlyLoggedIn: false });
+    } else {
+      res.json({
+        currentlyLoggedIn: true,
+        userId: req.user.user_id,
+        username: req.user.username,
+      });
+    }
   }
-});
+);
 
-app.post("/register", (req, res) => {
+app.post("/api/register", (req, res) => {
   console.log("At POST to /register here is the req.body ..... : ", req.body);
   const { username, password } = req.body;
   if (!username || !password) {
@@ -257,7 +261,7 @@ app.post("/register", (req, res) => {
   );
 });
 
-app.post("/login", passport.authenticate("local"), (req, res) => {
+app.post("/api/login", passport.authenticate("local"), (req, res) => {
   console.log("A successful login occurred.");
 
   if (req.isAuthenticated()) {
@@ -273,7 +277,7 @@ app.post("/login", passport.authenticate("local"), (req, res) => {
   });
 });
 
-app.get("/logout", (req, res) => {
+app.get("/api/logout", (req, res) => {
   if (req.isAuthenticated()) {
     console.log("At GET /logout... Yes, indeed!");
   } else {
@@ -289,7 +293,7 @@ app.get("/logout", (req, res) => {
   });
 });
 
-// app.get("/users", (req, res) => {
+// app.get("/api/users", (req, res) => {
 //   if (req.isAuthenticated()) {
 //     console.log("At GET /users... Yes, indeed!");
 //   } else {
@@ -322,7 +326,7 @@ app.get("/logout", (req, res) => {
 //   );
 // });
 
-// app.put("/users/:id", (req, res) => {
+// app.put("/api/users/:id", (req, res) => {
 //   const userId = req.params.id;
 //   const { username, password } = req.body;
 
@@ -346,7 +350,7 @@ app.get("/logout", (req, res) => {
 //   );
 // });
 
-// app.delete("/users/:id", (req, res) => {
+// app.delete("/api/users/:id", (req, res) => {
 //   const userId = req.params.id;
 
 //   pool.query("DELETE FROM users WHERE id = $1", [userId], (err, result) => {
@@ -359,7 +363,7 @@ app.get("/logout", (req, res) => {
 //   });
 // });
 
-app.post("/yelp-data/:location", async (req, res) => {
+app.post("/api/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
   console.log(
     "At POST to /yelp-data/:location here is the req.body ..... : ",
