@@ -363,6 +363,37 @@ app.get("/api/logout", (req, res) => {
 //   });
 // });
 
+app.post("api/venues-attending", (req, res) => {
+  if (req.isAuthenticated()) {
+    console.log("At POST /venues-attending... Yes, indeed!");
+  } else {
+    console.log("At POST /venues-attending... No, not at all!");
+  }
+
+  const receivedVenueId = req.body.venueAttendingJsonData;
+  console.log(receivedVenueId);
+
+  pool.query(
+    "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
+    [receivedVenueId],
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query at POST /venues-attending: ", err);
+        res.json({
+          insertSuccessful: false,
+          error: err,
+        });
+      } else {
+        console.log("Query result at POST /venues-attending`: ", result.rows);
+        res.json({
+          insertSuccessful: true,
+          message: `Successfully inserted venue id ${receivedVenueId} into database`,
+        });
+      }
+    }
+  );
+});
+
 app.post("/api/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
   console.log(
