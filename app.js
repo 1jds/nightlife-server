@@ -316,11 +316,11 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
     });
   }
 
-  return res.json({
-    loginSuccessful: true,
-    userId: req.user.user_id,
-    username: req.user.username,
-  });
+  // return res.json({
+  //   loginSuccessful: true,
+  //   userId: req.user.user_id,
+  //   username: req.user.username,
+  // });
 });
 
 app.get("/api/logout", (req, res) => {
