@@ -370,7 +370,7 @@ app.post("/api/venues-attending", (req, res) => {
     console.log("At POST /venues-attending... No, not at all!");
   }
 
-  const receivedVenueId = req.body.venueAttendingJsonData;
+  const receivedVenueId = req.body.venueYelpId;
   console.log(receivedVenueId);
 
   pool.query(
