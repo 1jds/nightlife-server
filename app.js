@@ -441,6 +441,30 @@ app.post("/api/venues-attending", (req, res) => {
   );
 });
 
+app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
+  const venueYelpId = req.params.venueYelpId;
+  const url = `https://api.yelp.com/v3/businesses/${venueYelpId}`;
+  const options = {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+    },
+  };
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log("Data received:", data);
+    return res.json(data);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return res.send(error);
+  }
+});
+
 app.post("/api/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
   console.log(
