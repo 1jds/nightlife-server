@@ -195,67 +195,67 @@ app.use(passport.session());
 //   res.send("Welcome to the nightlife server!");
 // });
 
-app.get("/current-session", (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.json({ currentlyLoggedIn: false });
-  } else {
-    // Call our helper function for getting a list of venues the user is attending
-    getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
-      if (err) {
-        return res.send(err);
-      } else {
-        return res.json({
-          currentlyLoggedIn: true,
-          userId: req.user.user_id,
-          username: req.user.username,
-          venuesAttendingIds,
-        });
-      }
-    });
-  }
-});
-
-// app.get(
-//   "/api/current-session",
-//   passport.authenticate("session"),
-//   (req, res) => {
-//     // console.log(
-//     //   "Here is the req.session for /current-session......... :",
-//     //   req.session,
-//     //   "Here is the req.session.passport for /current-session......... :",
-//     //   req.session.passport
-//     // );
-//     if (req.isAuthenticated()) {
-//       console.log("At GET /current-session... Yes, indeed!");
-//     } else {
-//       console.log("At GET /current-session... No, not at all!");
-//     }
-
-//     if (!req.user) {
-//       res.json({ currentlyLoggedIn: false });
-//     } else {
-//       pool.query(
-//         "SELECT venue_yelp_id FROM venues JOIN users_venues ON venues.venue_id = users_venues.venue_id WHERE users_venues.user_id = $1",
-//         [req.user.user_id],
-//         (err, result) => {
-//           if (err) {
-//             return res.send(err);
-//           } else {
-//             console.log("The result from the query... : ", result);
-//             console.log("The type of the result : ", typeof result);
-//             console.log("The rows from the query... : ", result.rows);
-//             return res.json({
-//               currentlyLoggedIn: true,
-//               userId: req.user.user_id,
-//               username: req.user.username,
-//               venuesAttendingIds: result?.rows,
-//             });
-//           }
-//         }
-//       );
-//     }
+// app.get("/current-session", (req, res) => {
+//   if (!req.isAuthenticated()) {
+//     return res.json({ currentlyLoggedIn: false });
+//   } else {
+//     // Call our helper function for getting a list of venues the user is attending
+//     getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
+//       if (err) {
+//         return res.send(err);
+//       } else {
+//         return res.json({
+//           currentlyLoggedIn: true,
+//           userId: req.user.user_id,
+//           username: req.user.username,
+//           venuesAttendingIds,
+//         });
+//       }
+//     });
 //   }
-// );
+// });
+
+app.get(
+  "/api/current-session",
+  passport.authenticate("session"),
+  (req, res) => {
+    // console.log(
+    //   "Here is the req.session for /current-session......... :",
+    //   req.session,
+    //   "Here is the req.session.passport for /current-session......... :",
+    //   req.session.passport
+    // );
+    if (req.isAuthenticated()) {
+      console.log("At GET /current-session... Yes, indeed!");
+    } else {
+      console.log("At GET /current-session... No, not at all!");
+    }
+
+    if (!req.user) {
+      res.json({ currentlyLoggedIn: false });
+    } else {
+      pool.query(
+        "SELECT venue_yelp_id FROM venues JOIN users_venues ON venues.venue_id = users_venues.venue_id WHERE users_venues.user_id = $1",
+        [req.user.user_id],
+        (err, result) => {
+          if (err) {
+            return res.send(err);
+          } else {
+            console.log("The result from the query... : ", result);
+            console.log("The type of the result : ", typeof result);
+            console.log("The rows from the query... : ", result.rows);
+            return res.json({
+              currentlyLoggedIn: true,
+              userId: req.user.user_id,
+              username: req.user.username,
+              venuesAttendingIds: result?.rows,
+            });
+          }
+        }
+      );
+    }
+  }
+);
 
 app.post("/api/register", (req, res) => {
   console.log("At POST to /register here is the req.body ..... : ", req.body);
