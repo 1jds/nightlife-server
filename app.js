@@ -363,7 +363,7 @@ app.get("/api/logout", (req, res) => {
 //   });
 // });
 
-app.post("api/venues-attending", (req, res) => {
+app.post("/api/venues-attending", (req, res) => {
   if (req.isAuthenticated()) {
     console.log("At POST /venues-attending... Yes, indeed!");
   } else {
