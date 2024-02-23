@@ -214,11 +214,25 @@ app.get(
     if (!req.user) {
       res.json({ currentlyLoggedIn: false });
     } else {
-      res.json({
-        currentlyLoggedIn: true,
-        userId: req.user.user_id,
-        username: req.user.username,
-      });
+      pool.query(
+        "SELECT venue_yelp_id FROM venues JOIN users_venues ON venues.venue_id = users_venues.venue_id WHERE users_venues.user_id = $1",
+        [req.user.user_id],
+        (err, result) => {
+          if (err) {
+            return res.send(err);
+          }
+
+          console.log("The result from the query... : ", result);
+          console.log("The type of the result : ", typeof result);
+          console.log("The rows from the query... : ", result.rows);
+          res.json({
+            currentlyLoggedIn: true,
+            userId: req.user.user_id,
+            username: req.user.username,
+            venuesAttendingIds: result?.rows,
+          });
+        }
+      );
     }
   }
 );
@@ -236,7 +250,7 @@ app.post("/api/register", (req, res) => {
     [username],
     (err, result) => {
       if (err) {
-        return done(err);
+        return res.send(err);
       }
 
       const user = result.rows[0];
@@ -368,6 +382,7 @@ app.post("/api/venues-attending", (req, res) => {
     console.log("At POST /venues-attending... Yes, indeed!");
   } else {
     console.log("At POST /venues-attending... No, not at all!");
+    res.send("Please login before attempting to access this route.");
   }
 
   const receivedVenueId = req.body.venueYelpId;
