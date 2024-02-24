@@ -195,7 +195,7 @@ app.use(passport.session());
 //   res.send("Welcome to the nightlife server!");
 // });
 
-app.get("/current-session", (req, res) => {
+app.get("/api/current-session", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.json({ currentlyLoggedIn: false });
   } else {
