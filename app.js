@@ -307,7 +307,7 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
         return res.send(err);
       } else {
         return res.json({
-          currentlyLoggedIn: true,
+          loginSuccessful: true,
           userId: req.user.user_id,
           username: req.user.username,
           venuesAttendingIds,
