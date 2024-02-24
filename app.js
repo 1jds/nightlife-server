@@ -442,6 +442,7 @@ app.post("/api/venues-attending", (req, res) => {
 });
 
 app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
+  console.log("What does the req.params object looks like? ... : ", req.params);
   console.log(
     "What kind of req.params are coming through at /api/get-venues-attending/:venueYelpId... : ",
     req.params.venueYelpId
