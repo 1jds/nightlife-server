@@ -442,8 +442,11 @@ app.post("/api/venues-attending", (req, res) => {
 });
 
 app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
-  const venueYelpId = req.params.venueYelpId;
-  const url = `https://api.yelp.com/v3/businesses/${venueYelpId}`;
+  console.log(
+    "What kind of req.params are coming through at /api/get-venues-attending/:venueYelpId... : ",
+    req.params.venueYelpId
+  );
+  const url = `https://api.yelp.com/v3/businesses/${req.params.venueYelpId}`;
   const options = {
     method: "GET",
     headers: {
@@ -457,7 +460,7 @@ app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    console.log("Data received:", data);
+    console.log("Data received... : ", data);
     return res.json(data);
   } catch (error) {
     console.error("Error fetching data:", error);
