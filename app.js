@@ -446,6 +446,8 @@ app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
     "What kind of req.params are coming through at /api/get-venues-attending/:venueYelpId... : ",
     req.params.venueYelpId
   );
+  console.log("What is the typeof()?... : ", typeof req.params.venueYelpId);
+
   const url = `https://api.yelp.com/v3/businesses/${req.params.venueYelpId}`;
   const options = {
     method: "GET",
