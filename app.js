@@ -432,7 +432,7 @@ app.post("/api/venues-attending", async (req, res) => {
     );
   }
 
-  const venue_id = null;
+  let venue_id = null;
   try {
     const receivedVenueDbId = await pool.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
