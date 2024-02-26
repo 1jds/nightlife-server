@@ -636,11 +636,11 @@ function getVenuesAttendingIds(userId, callback) {
         const venuesAttendingStrArr = result?.rows.map(
           (item) => item.venue_yelp_id
         );
-        pool.end();
         callback(null, venuesAttendingStrArr);
       }
     }
   );
+  pool.end();
 }
 
 // --------------------------------------------- //
