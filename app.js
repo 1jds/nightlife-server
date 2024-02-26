@@ -271,12 +271,13 @@ app.post("/api/register", (req, res) => {
     (err, result) => {
       if (err) {
         return res.send(err);
+      } else {
+        const user = result.rows[0];
+        if (user) {
+          return res.json({ error: "Please select another username" });
+        }
       }
-
-      const user = result.rows[0];
-      if (user) {
-        return res.json({ error: "Please select another username" });
-      }
+      pool.end();
     }
   );
 
@@ -291,6 +292,7 @@ app.post("/api/register", (req, res) => {
       } else {
         return res.status(201).json({ message: "User created successfully" });
       }
+      pool.end();
     }
   );
 });
@@ -423,10 +425,10 @@ app.post("/api/venues-attending", async (req, res) => {
         "Error adding venue to plans. Venue and/or user data not received correctly. Try refreshing the page and searching again, or else log in again.",
     });
   }
-
+  const client = await pool.connect();
   let venue_id = null;
   try {
-    const receivedVenueDbId = await pool.query(
+    const receivedVenueDbId = await client.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [receivedVenueYelpId]
     );
@@ -437,12 +439,12 @@ app.post("/api/venues-attending", async (req, res) => {
     } else if (receivedVenueDbId.rowCount === 0) {
       // We need to insert the yelp id into the venues table, and then run SELECT venue_id before insert into user_venues
       try {
-        const insertNewVenue = await pool.query(
+        const insertNewVenue = await client.query(
           "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
           [receivedVenueYelpId]
         );
         try {
-          const venueDbId = await pool.query(
+          const venueDbId = await client.query(
             "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
             [receivedVenueYelpId]
           );
@@ -468,7 +470,7 @@ app.post("/api/venues-attending", async (req, res) => {
     }
     // Once we have established the venue_id, we can insert into user_venues
     try {
-      let result = await pool.query(
+      let result = await client.query(
         "INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);",
         [receivedUserId, venue_id]
       );
@@ -488,6 +490,8 @@ app.post("/api/venues-attending", async (req, res) => {
       insertSuccessful: false,
       error: err,
     });
+  } finally {
+    client.release();
   }
 });
 
@@ -506,17 +510,17 @@ app.post("/api/venue-remove", async (req, res) => {
     });
   }
 
+  const client = await pool.connect();
+
   try {
-    const receivedVenueDbId = await pool.query(
+    const receivedVenueDbId = await client.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [receivedVenueYelpId]
     );
 
     try {
-      let resultOfRemove = await pool.query(
-        pool.query(
-          "DELETE FROM users_venues WHERE user_id = $1 AND venue_id = $2;"
-        ),
+      let resultOfRemove = await client.query(
+        "DELETE FROM users_venues WHERE user_id = $1 AND venue_id = $2;",
         [receivedUserId, receivedVenueDbId.rows[0].venue_id]
       );
       return res.json({
@@ -535,6 +539,9 @@ app.post("/api/venue-remove", async (req, res) => {
       removeSuccessful: false,
       error: err,
     });
+  } finally {
+    // Release the client back to the pool
+    client.release();
   }
 });
 
@@ -631,6 +638,8 @@ function getVenuesAttendingIds(userId, callback) {
         );
         callback(null, venuesAttendingStrArr);
       }
+      // Release the connection back to the pool
+      pool.end();
     }
   );
 }
