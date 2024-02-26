@@ -536,7 +536,7 @@ app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
     return res.json(data);
   } catch (error) {
     console.error("Error fetching data:", error);
-    return res.send(error);
+    return res.json({ error });
   }
 });
 
