@@ -410,22 +410,13 @@ app.get("/api/logout", (req, res) => {
 // });
 
 app.post("/api/venues-attending", async (req, res) => {
-  if (req.isAuthenticated()) {
-    console.log("At POST /venues-attending... Yes, indeed!");
-  } else {
-    console.log("At POST /venues-attending... No, not at all!");
+  if (!req.isAuthenticated()) {
+    console.log("At POST /venues-attending... Not authenticated");
     res.send("Please login before attempting to access this route.");
   }
 
   const receivedVenueYelpId = req.body.venueYelpId;
   const receivedUserId = req.body.userId;
-  console.log(
-    "receivedVenueYelpId at /api/venues-attending",
-    receivedVenueYelpId,
-    "receivedUserId at /api/venues-attending",
-    receivedUserId
-  );
-
   if (!receivedVenueYelpId || !receivedUserId) {
     res.send(
       "Error adding venue to plans. Venue and/or user data not received correctly. Try refreshing the page and searching again, or else log in again."
@@ -440,17 +431,14 @@ app.post("/api/venues-attending", async (req, res) => {
     );
 
     if (receivedVenueDbId.rowCount === 1) {
+      // Venue id already in database, now just insert to users_venues tables below
       venue_id = receivedVenueDbId.rows[0].venue_id;
     } else if (receivedVenueDbId.rowCount === 0) {
-      // We need to insert the yelp id into the venues table, and then select again...
+      // We need to insert the yelp id into the venues table, and then run SELECT venue_id before insert into user_venues
       try {
         const insertNewVenue = await pool.query(
           "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
           [receivedVenueYelpId]
-        );
-        console.log(
-          "AND THIS IS WHAT THE insertNewVenue result looks like... :",
-          insertNewVenue
         );
         try {
           const venueDbId = await pool.query(
@@ -466,36 +454,24 @@ app.post("/api/venues-attending", async (req, res) => {
           "Error executing query at POST /venues-attending: ",
           error.message
         );
-        res.json({
+        return res.json({
           insertSuccessful: false,
           error: err,
         });
       }
-      //     console.log("Query result at POST /venues-attending`: ", result.rows);
-      //     res.json({
-      //       insertSuccessful: true,
-      //       message: `Successfully inserted venue id ${receivedVenueId} into database`,
-      //     });
     } else {
+      // The rowCount should not be more than 1, otherwise there are duplicates
       return res.json({
         error: "There are duplicate values in the database causing an error.",
       });
     }
-
+    // Once we have established the venue_id, we can insert into user_venues
     try {
-      console.log(
-        "WHAT DOES venue_id look like at this point????? IS IT NULL???? ..... :",
-        venue_id
-      );
       let result = await pool.query(
         "INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);",
         [receivedUserId, venue_id]
       );
-      console.log(
-        "at /api/venues-attending at INSERT INTO users_venues... :",
-        result
-      );
-      res.json({
+      return res.json({
         insertSuccessful: true,
         message: `Successfully inserted venue with id ${receivedVenueYelpId} into database`,
       });
@@ -507,8 +483,54 @@ app.post("/api/venues-attending", async (req, res) => {
       "Error finding venue_id from venues at /api/venues-attending... :",
       error.message
     );
-    res.json({
+    return res.json({
       insertSuccessful: false,
+      error: err,
+    });
+  }
+});
+
+app.post("/api/venues-attending/remove", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    console.log("At POST /venues-attending/remove... Not authenticated");
+    res.send("Please login before attempting to access this route.");
+  }
+
+  const receivedVenueYelpId = req.body.venueYelpId;
+  const receivedUserId = req.body.userId;
+  if (!receivedVenueYelpId || !receivedUserId) {
+    res.send(
+      "Error adding venue to plans. Venue and/or user data not received correctly. Try refreshing the page and searching again, or else log in again."
+    );
+  }
+
+  try {
+    const receivedVenueDbId = await pool.query(
+      "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
+      [receivedVenueYelpId]
+    );
+
+    try {
+      let resultOfRemove = await pool.query(
+        pool.query(
+          "DELETE FROM users_venues WHERE user_id = $1 AND venue_id = $2;"
+        ),
+        [receivedUserId, receivedVenueDbId.rows[0].venue_id]
+      );
+      return res.json({
+        removeSuccessful: true,
+        message: `Successfully removed venue with id ${receivedVenueYelpId} from database`,
+      });
+    } catch (error) {
+      console.error(error.message);
+    }
+  } catch (error) {
+    console.error(
+      "Error finding venue_id from venues at /api/venues-attending/remove... :",
+      error.message
+    );
+    return res.json({
+      removeSuccessful: false,
       error: err,
     });
   }
