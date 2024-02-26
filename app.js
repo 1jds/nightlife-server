@@ -277,7 +277,6 @@ app.post("/api/register", (req, res) => {
           return res.json({ error: "Please select another username" });
         }
       }
-      pool.end();
     }
   );
 
@@ -292,7 +291,6 @@ app.post("/api/register", (req, res) => {
       } else {
         return res.status(201).json({ message: "User created successfully" });
       }
-      pool.end();
     }
   );
 });
@@ -428,60 +426,31 @@ app.post("/api/venues-attending", async (req, res) => {
   const client = await pool.connect();
   let venue_id = null;
   try {
+    await client.query("BEGIN");
     const receivedVenueDbId = await client.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [receivedVenueYelpId]
     );
-
     if (receivedVenueDbId.rowCount === 1) {
-      // Venue id already in database, now just insert to users_venues tables below
       venue_id = receivedVenueDbId.rows[0].venue_id;
-    } else if (receivedVenueDbId.rowCount === 0) {
-      // We need to insert the yelp id into the venues table, and then run SELECT venue_id before insert into user_venues
-      try {
-        const insertNewVenue = await client.query(
-          "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
-          [receivedVenueYelpId]
-        );
-        try {
-          const venueDbId = await client.query(
-            "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
-            [receivedVenueYelpId]
-          );
-          venue_id = venueDbId.rows[0].venue_id;
-        } catch (error) {
-          console.error(error.message);
-        }
-      } catch (error) {
-        console.error(
-          "Error executing query at POST /venues-attending: ",
-          error.message
-        );
-        return res.json({
-          insertSuccessful: false,
-          error: err,
-        });
-      }
     } else {
-      // The rowCount should not be more than 1, otherwise there are duplicates
-      return res.json({
-        error: "There are duplicate values in the database causing an error.",
-      });
-    }
-    // Once we have established the venue_id, we can insert into user_venues
-    try {
-      let result = await client.query(
-        "INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);",
-        [receivedUserId, venue_id]
+      const insertNewVenue = await client.query(
+        "INSERT INTO venues (venue_yelp_id) VALUES ($1) RETURNING venue_id ON CONFLICT (venue_yelp_id) DO NOTHING;",
+        [receivedVenueYelpId]
       );
-      return res.json({
-        insertSuccessful: true,
-        message: `Successfully inserted venue with id ${receivedVenueYelpId} into database`,
-      });
-    } catch (error) {
-      console.error(error.message);
+      venue_id = insertNewVenue.rows[0].venue_id;
     }
+    let result = await client.query(
+      "INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);",
+      [receivedUserId, venue_id]
+    );
+    await client.query("COMMIT");
+    return res.json({
+      insertSuccessful: true,
+      message: `Successfully inserted venue with id ${receivedVenueYelpId} into database`,
+    });
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error(
       "Error finding venue_id from venues at /api/venues-attending... :",
       error.message
@@ -511,26 +480,22 @@ app.post("/api/venue-remove", async (req, res) => {
   }
 
   const client = await pool.connect();
-
   try {
     const receivedVenueDbId = await client.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [receivedVenueYelpId]
     );
-
-    try {
-      let resultOfRemove = await client.query(
-        "DELETE FROM users_venues WHERE user_id = $1 AND venue_id = $2;",
-        [receivedUserId, receivedVenueDbId.rows[0].venue_id]
-      );
-      return res.json({
-        removeSuccessful: true,
-        message: `Successfully removed venue with id ${receivedVenueYelpId} from database`,
-      });
-    } catch (error) {
-      console.error(error.message);
-    }
+    const resultOfRemove = await client.query(
+      "DELETE FROM users_venues WHERE user_id = $1 AND venue_id = $2;",
+      [receivedUserId, receivedVenueDbId.rows[0].venue_id]
+    );
+    await client.query("COMMIT");
+    return res.json({
+      removeSuccessful: true,
+      message: `Successfully removed venue with id ${receivedVenueYelpId} from database`,
+    });
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error(
       "Error finding venue_id from venues at /api/venues-attending/remove... :",
       error.message
@@ -540,7 +505,6 @@ app.post("/api/venue-remove", async (req, res) => {
       error: err,
     });
   } finally {
-    // Release the client back to the pool
     client.release();
   }
 });
@@ -640,7 +604,6 @@ function getVenuesAttendingIds(userId, callback) {
       }
     }
   );
-  pool.end();
 }
 
 // --------------------------------------------- //
