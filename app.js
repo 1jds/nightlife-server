@@ -489,7 +489,7 @@ app.post("/api/venues-attending", async (req, res) => {
       );
       let result = await pool.query(
         "INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);",
-        [receivedUserId, receivedVenueDbId.rows[0].venue_id]
+        [receivedUserId, venue_id]
       );
       console.log(
         "at /api/venues-attending at INSERT INTO users_venues... :",
