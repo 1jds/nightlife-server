@@ -418,9 +418,10 @@ app.post("/api/venues-attending", async (req, res) => {
   const receivedVenueYelpId = req.body.venueYelpId;
   const receivedUserId = req.body.userId;
   if (!receivedVenueYelpId || !receivedUserId) {
-    res.send(
-      "Error adding venue to plans. Venue and/or user data not received correctly. Try refreshing the page and searching again, or else log in again."
-    );
+    res.json({
+      error:
+        "Error adding venue to plans. Venue and/or user data not received correctly. Try refreshing the page and searching again, or else log in again.",
+    });
   }
 
   let venue_id = null;
@@ -490,7 +491,7 @@ app.post("/api/venues-attending", async (req, res) => {
   }
 });
 
-app.post("/api/venues-attending/remove", async (req, res) => {
+app.post("/api/venue-remove", async (req, res) => {
   if (!req.isAuthenticated()) {
     console.log("At POST /venues-attending/remove... Not authenticated");
     res.send("Please login before attempting to access this route.");
@@ -499,9 +500,10 @@ app.post("/api/venues-attending/remove", async (req, res) => {
   const receivedVenueYelpId = req.body.venueYelpId;
   const receivedUserId = req.body.userId;
   if (!receivedVenueYelpId || !receivedUserId) {
-    res.send(
-      "Error adding venue to plans. Venue and/or user data not received correctly. Try refreshing the page and searching again, or else log in again."
-    );
+    return res.json({
+      error:
+        "Error adding venue to plans. Venue and/or user data not received correctly. Try refreshing the page and searching again, or else log in again.",
+    });
   }
 
   try {
