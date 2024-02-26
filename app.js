@@ -432,14 +432,17 @@ app.post("/api/venues-attending", async (req, res) => {
     );
   }
 
+  const venue_id = null;
   try {
-    const receiveVenueDbId = await pool.query(
+    const receivedVenueDbId = await pool.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [receivedVenueYelpId]
     );
 
-    if (receiveVenueDbId.rowCount === 0) {
-      // We need to insert the yelp id into the venues table...
+    if (receivedVenueDbId.rowCount === 1) {
+      venue_id = receivedVenueDbId.rows[0].venue_id;
+    } else if (receivedVenueDbId.rowCount === 0) {
+      // We need to insert the yelp id into the venues table, and then select again...
       try {
         const insertNewVenue = await pool.query(
           "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
@@ -449,6 +452,15 @@ app.post("/api/venues-attending", async (req, res) => {
           "AND THIS IS WHAT THE insertNewVenue result looks like... :",
           insertNewVenue
         );
+        try {
+          const venueDbId = await pool.query(
+            "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
+            [receivedVenueYelpId]
+          );
+          venue_id = venueDbId.rows[0].venue_id;
+        } catch (error) {
+          console.error(error.message);
+        }
       } catch (error) {
         console.error(
           "Error executing query at POST /venues-attending: ",
@@ -459,21 +471,36 @@ app.post("/api/venues-attending", async (req, res) => {
           error: err,
         });
       }
-
-      // let result = pool.query("INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);", [
-      //   receivedUserId,
-      // ]);
-
       //     console.log("Query result at POST /venues-attending`: ", result.rows);
       //     res.json({
       //       insertSuccessful: true,
       //       message: `Successfully inserted venue id ${receivedVenueId} into database`,
       //     });
     } else {
+      return res.json({
+        error: "There are duplicate values in the database causing an error.",
+      });
+    }
+
+    try {
       console.log(
-        "WHAT DOES THIS DATA HERE ACTUALLY LOOK LIKE if its already in venues??? receiveVenueDbId... : ",
-        receiveVenueDbId
+        "WHAT DOES venue_id look like at this point????? IS IT NULL???? ..... :",
+        venue_id
       );
+      let result = await pool.query(
+        "INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);",
+        [receivedUserId, receivedVenueDbId.rows[0].venue_id]
+      );
+      console.log(
+        "at /api/venues-attending at INSERT INTO users_venues... :",
+        result
+      );
+      res.json({
+        insertSuccessful: true,
+        message: `Successfully inserted venue with id ${receivedVenueYelpId} into database`,
+      });
+    } catch (error) {
+      console.error(error.message);
     }
   } catch (error) {
     console.error(
