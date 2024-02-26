@@ -435,7 +435,7 @@ app.post("/api/venues-attending", async (req, res) => {
       venue_id = receivedVenueDbId.rows[0].venue_id;
     } else {
       const insertNewVenue = await client.query(
-        "INSERT INTO venues (venue_yelp_id) VALUES ($1) RETURNING venue_id ON CONFLICT (venue_yelp_id) DO NOTHING;",
+        "INSERT INTO venues (venue_yelp_id) VALUES ($1) RETURNING venue_id;",
         [receivedVenueYelpId]
       );
       venue_id = insertNewVenue.rows[0].venue_id;
@@ -457,7 +457,7 @@ app.post("/api/venues-attending", async (req, res) => {
     );
     return res.json({
       insertSuccessful: false,
-      error: err,
+      error,
     });
   } finally {
     client.release();
