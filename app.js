@@ -409,7 +409,7 @@ app.get("/api/logout", (req, res) => {
 //   });
 // });
 
-app.post("/api/venues-attending", (req, res) => {
+app.post("/api/venues-attending", async (req, res) => {
   if (req.isAuthenticated()) {
     console.log("At POST /venues-attending... Yes, indeed!");
   } else {
@@ -417,30 +417,65 @@ app.post("/api/venues-attending", (req, res) => {
     res.send("Please login before attempting to access this route.");
   }
 
-  const receivedVenueId = req.body.venueYelpId;
-  console.log(receivedVenueId);
+  const receivedVenueYelpId = req.body.venueYelpId;
+  const receivedUserId = req.body.userId;
+  console.log(receivedVenueYelpId, receivedUserId);
 
-  pool.query(
-    "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
-    [receivedVenueId],
-    (err, result) => {
-      if (err) {
-        console.error("Error executing query at POST /venues-attending: ", err);
-        res.json({
-          insertSuccessful: false,
-          error: err,
-        });
-      } else {
-        console.log("Query result at POST /venues-attending`: ", result.rows);
-        res.json({
-          insertSuccessful: true,
-          message: `Successfully inserted venue id ${receivedVenueId} into database`,
-        });
-      }
+  if (!receivedVenueYelpId || !receivedUserId) {
+    res.send(
+      "Error adding venue to plans. Venue and/or user data not received correctly. Try refreshing the page and searching again, or else log in again."
+    );
+  }
+
+  try {
+    const receiveVenueDbId = await pool.query(
+      "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
+      [receivedVenueYelpId]
+    );
+
+    if (receiveVenueDbId.rows[0]) {
+      console.log(
+        "WHAT DOES THIS DATA HERE ACTUALLY LOOK LIKE??? ... : ",
+        receiveVenueDbId.rows[0]
+      );
     }
-  );
+  } catch (error) {
+    console.error(
+      "Error finding venue_id from venues at /api/venues-attending... :",
+      error.message
+    );
+    res.json({
+      insertSuccessful: false,
+      error: err,
+    });
+  }
+
+  // pool.query(
+  //   "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
+  //   [receivedVenueYelpId],
+  //   (err, result) => {
+  //     if (err) {
+  //       console.error("Error executing query at POST /venues-attending: ", err);
+  //       res.json({
+  //         insertSuccessful: false,
+  //         error: err,
+  //       });
+  //     } else {
+  //       console.log("Query result at POST /venues-attending`: ", result.rows);
+  //       res.json({
+  //         insertSuccessful: true,
+  //         message: `Successfully inserted venue id ${receivedVenueId} into database`,
+  //       });
+  //     }
+  //   }
+  // );
+
+  // pool.query("INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);", [
+  //   receivedUserId,
+  // ]);
 });
 
+// ------ YELP calls ------
 app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
   console.log("What does the req.params object looks like? ... : ", req.params);
   console.log(
