@@ -419,7 +419,12 @@ app.post("/api/venues-attending", async (req, res) => {
 
   const receivedVenueYelpId = req.body.venueYelpId;
   const receivedUserId = req.body.userId;
-  console.log(receivedVenueYelpId, receivedUserId);
+  console.log(
+    "receivedVenueYelpId at /api/venues-attending",
+    receivedVenueYelpId,
+    "receivedUserId at /api/venues-attending",
+    receivedUserId
+  );
 
   if (!receivedVenueYelpId || !receivedUserId) {
     res.send(
@@ -437,6 +442,12 @@ app.post("/api/venues-attending", async (req, res) => {
       console.log(
         "WHAT DOES THIS DATA HERE ACTUALLY LOOK LIKE??? ... : ",
         receiveVenueDbId.rows[0]
+      );
+    } else {
+      console.log(
+        "WHAT DOES THIS DATA HERE ACTUALLY LOOK LIKE #2??? receiveVenueDbId, receiveVenueDbId.rows... : ",
+        receiveVenueDbId,
+        receiveVenueDbId.rows
       );
     }
   } catch (error) {
