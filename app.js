@@ -438,16 +438,41 @@ app.post("/api/venues-attending", async (req, res) => {
       [receivedVenueYelpId]
     );
 
-    if (receiveVenueDbId.rows[0]) {
-      console.log(
-        "WHAT DOES THIS DATA HERE ACTUALLY LOOK LIKE??? ... : ",
-        receiveVenueDbId.rows[0]
-      );
+    if (receiveVenueDbId.rowCount === 0) {
+      // We need to insert the yelp id into the venues table...
+      try {
+        const insertNewVenue = await pool.query(
+          "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
+          [receivedVenueYelpId]
+        );
+        console.log(
+          "AND THIS IS WHAT THE insertNewVenue result looks like... :",
+          insertNewVenue
+        );
+      } catch (error) {
+        console.error(
+          "Error executing query at POST /venues-attending: ",
+          error.message
+        );
+        res.json({
+          insertSuccessful: false,
+          error: err,
+        });
+      }
+
+      // let result = pool.query("INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);", [
+      //   receivedUserId,
+      // ]);
+
+      //     console.log("Query result at POST /venues-attending`: ", result.rows);
+      //     res.json({
+      //       insertSuccessful: true,
+      //       message: `Successfully inserted venue id ${receivedVenueId} into database`,
+      //     });
     } else {
       console.log(
-        "WHAT DOES THIS DATA HERE ACTUALLY LOOK LIKE #2??? receiveVenueDbId, receiveVenueDbId.rows... : ",
-        receiveVenueDbId,
-        receiveVenueDbId.rows
+        "WHAT DOES THIS DATA HERE ACTUALLY LOOK LIKE if its already in venues??? receiveVenueDbId... : ",
+        receiveVenueDbId
       );
     }
   } catch (error) {
@@ -460,30 +485,6 @@ app.post("/api/venues-attending", async (req, res) => {
       error: err,
     });
   }
-
-  // pool.query(
-  //   "INSERT INTO venues (venue_yelp_id) VALUES ($1) ON CONFLICT (venue_yelp_id) DO NOTHING;",
-  //   [receivedVenueYelpId],
-  //   (err, result) => {
-  //     if (err) {
-  //       console.error("Error executing query at POST /venues-attending: ", err);
-  //       res.json({
-  //         insertSuccessful: false,
-  //         error: err,
-  //       });
-  //     } else {
-  //       console.log("Query result at POST /venues-attending`: ", result.rows);
-  //       res.json({
-  //         insertSuccessful: true,
-  //         message: `Successfully inserted venue id ${receivedVenueId} into database`,
-  //       });
-  //     }
-  //   }
-  // );
-
-  // pool.query("INSERT INTO users_venues (user_id, venue_id) VALUES ($1, $2);", [
-  //   receivedUserId,
-  // ]);
 });
 
 // ------ YELP calls ------
