@@ -192,7 +192,7 @@ app.use(passport.session());
 // --------------------------------------------- //
 
 // app.get("/", (req, res) => {
-//   res.send("Welcome to the nightlife server!");
+//   res.json({message: "Welcome to the nightlife server!"});
 // });
 
 app.get("/api/current-session", (req, res) => {
@@ -202,7 +202,7 @@ app.get("/api/current-session", (req, res) => {
     // Call our helper function for getting a list of venues the user is attending
     getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
       if (err) {
-        return res.send(err);
+        return res.json({ err });
       } else {
         return res.json({
           currentlyLoggedIn: true,
@@ -239,7 +239,7 @@ app.get("/api/current-session", (req, res) => {
 //         [req.user.user_id],
 //         (err, result) => {
 //           if (err) {
-//             return res.send(err);
+//             return res.json({err});
 //           } else {
 //             console.log("The result from the query... : ", result);
 //             console.log("The type of the result : ", typeof result);
@@ -270,7 +270,7 @@ app.post("/api/register", (req, res) => {
     [username],
     (err, result) => {
       if (err) {
-        return res.send(err);
+        return res.json({ err });
       } else {
         const user = result.rows[0];
         if (user) {
@@ -304,7 +304,7 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
     // Call our helper function for getting a list of venues the user is attending
     getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
       if (err) {
-        return res.send(err);
+        return res.json({ err });
       } else {
         return res.json({
           loginSuccessful: true,
@@ -412,7 +412,9 @@ app.get("/api/logout", (req, res) => {
 app.post("/api/venues-attending", async (req, res) => {
   if (!req.isAuthenticated()) {
     console.log("At POST /venues-attending... Not authenticated");
-    res.send("Please login before attempting to access this route.");
+    res.json({
+      message: "Please login before attempting to access this route.",
+    });
   }
 
   const receivedVenueYelpId = req.body.venueYelpId;
@@ -467,7 +469,9 @@ app.post("/api/venues-attending", async (req, res) => {
 app.post("/api/venue-remove", async (req, res) => {
   if (!req.isAuthenticated()) {
     console.log("At POST /venues-attending/remove... Not authenticated");
-    res.send("Please login before attempting to access this route.");
+    res.json({
+      message: "Please login before attempting to access this route.",
+    });
   }
 
   const receivedVenueYelpId = req.body.venueYelpId;
@@ -506,6 +510,39 @@ app.post("/api/venue-remove", async (req, res) => {
     });
   } finally {
     client.release();
+  }
+});
+
+app.get("/api/number-attending", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    console.log("At POST /number-attending... Not authenticated");
+    res.json({
+      message: "Please login before attempting to access this route.",
+    });
+  }
+  const yelpId = req.body.yelpId;
+  try {
+    const venue_id = await pool.query(
+      "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
+      [yelpId]
+    );
+    const attendingCount = await pool.query(
+      "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
+      [venue_id]
+    );
+    return res.json({
+      countAttendeesSuccessful: true,
+      attendingCount,
+    });
+  } catch (error) {
+    console.error(
+      "Error counting venue attendees at /api/number-attending... :",
+      error.message
+    );
+    return res.json({
+      countAttendeesSuccessful: false,
+      error: err,
+    });
   }
 });
 
