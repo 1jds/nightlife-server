@@ -572,6 +572,13 @@ app.post("/api/yelp-data/:location", async (req, res) => {
   };
   try {
     const response = await fetch(url, options);
+    if (response.status === 400) {
+      res.status(400).json({
+        locationFound: false,
+        message:
+          "No venue information was found for that location, please try searching another locality.",
+      });
+    }
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
