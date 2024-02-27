@@ -513,38 +513,38 @@ app.post("/api/venue-remove", async (req, res) => {
   }
 });
 
-app.get("/api/number-attending", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    console.log("At POST /number-attending... Not authenticated");
-    res.json({
-      message: "Please login before attempting to access this route.",
-    });
-  }
-  const yelpId = req.body.yelpId;
-  try {
-    const venue_id = await pool.query(
-      "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
-      [yelpId]
-    );
-    const attendingCount = await pool.query(
-      "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
-      [venue_id]
-    );
-    return res.json({
-      countAttendeesSuccessful: true,
-      attendingCount,
-    });
-  } catch (error) {
-    console.error(
-      "Error counting venue attendees at /api/number-attending... :",
-      error.message
-    );
-    return res.json({
-      countAttendeesSuccessful: false,
-      error: err,
-    });
-  }
-});
+// app.get("/api/number-attending", async (req, res) => {
+//   if (!req.isAuthenticated()) {
+//     console.log("At POST /number-attending... Not authenticated");
+//     res.json({
+//       message: "Please login before attempting to access this route.",
+//     });
+//   }
+//   const yelpId = req.body.yelpId;
+//   try {
+//     const venue_id = await pool.query(
+//       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
+//       [yelpId]
+//     );
+//     const attendingCount = await pool.query(
+//       "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
+//       [venue_id]
+//     );
+//     return res.json({
+//       countAttendeesSuccessful: true,
+//       attendingCount,
+//     });
+//   } catch (error) {
+//     console.error(
+//       "Error counting venue attendees at /api/number-attending... :",
+//       error.message
+//     );
+//     return res.json({
+//       countAttendeesSuccessful: false,
+//       error: err,
+//     });
+//   }
+// });
 
 // ------ YELP calls ------
 app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
