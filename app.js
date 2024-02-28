@@ -22,9 +22,15 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
+const allowedCorsOrigins = [
+  "https://nightlife-8ddy.onrender.com",
+  "https://nightlife-8ddy.onrender.com/",
+  "https://github.com",
+  "https://github.com/",
+];
 app.use(
   cors({
-    origin: "https://nightlife-8ddy.onrender.com", // "https://nightlife-six.vercel.app", // "http://localhost:5173", // "https://nightlifeapp.onrender.com",
+    origin: allowedCorsOrigins,
     credentials: true,
     "Access-Control-Allow-Credentials": true,
   })
