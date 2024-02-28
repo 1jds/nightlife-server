@@ -305,27 +305,55 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
   }
 });
 
-app.get("/api/login/github", passport.authenticate("github"), (req, res) => {
-  if (!req.isAuthenticated()) {
-    console.log("Login failed at /api/login/github");
-    return res.json({ currentlyLoggedIn: false });
-  } else {
-    console.log("A successful login occurred.");
-    // Call our helper function for getting a list of venues the user is attending
-    getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
-      if (err) {
-        return res.json({ err });
-      } else {
-        return res.json({
-          loginSuccessful: true,
-          userId: req.user.user_id,
-          username: req.user.username,
-          venuesAttendingIds,
-        });
-      }
-    });
+// app.get("/api/login/github", passport.authenticate("github"), (req, res) => {
+//   if (!req.isAuthenticated()) {
+//     console.log("Login failed at /api/login/github");
+//     return res.json({ currentlyLoggedIn: false });
+//   } else {
+//     console.log("A successful login occurred.");
+//     // Call our helper function for getting a list of venues the user is attending
+//     getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
+//       if (err) {
+//         return res.json({ err });
+//       } else {
+//         return res.json({
+//           loginSuccessful: true,
+//           userId: req.user.user_id,
+//           username: req.user.username,
+//           venuesAttendingIds,
+//         });
+//       }
+//     });
+//   }
+// });
+
+app.get("/api/login/github", passport.authenticate("github"));
+
+app.get(
+  "/api/login/github/callback",
+  passport.authenticate("github", { failureRedirect: "/" }),
+  (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log("Login failed at /api/login/github");
+      return res.json({ currentlyLoggedIn: false });
+    } else {
+      console.log("A successful login occurred.");
+      // Call our helper function for getting a list of venues the user is attending
+      getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
+        if (err) {
+          return res.json({ err });
+        } else {
+          return res.json({
+            loginSuccessful: true,
+            userId: req.user.user_id,
+            username: req.user.username,
+            venuesAttendingIds,
+          });
+        }
+      });
+    }
   }
-});
+);
 
 // app.get("/api/login/google", (req, res) => {
 //   Yet to be set up...
