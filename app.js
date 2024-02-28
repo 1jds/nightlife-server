@@ -298,7 +298,7 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
   }
 });
 
-app.post("/api/login/github", passport.authenticate("github"), (req, res) => {
+app.get("/api/login/github", passport.authenticate("github"), (req, res) => {
   if (!req.isAuthenticated()) {
     console.log("Login failed at /api/login/github");
     return res.json({ currentlyLoggedIn: false });
@@ -319,6 +319,14 @@ app.post("/api/login/github", passport.authenticate("github"), (req, res) => {
     });
   }
 });
+
+// app.get("/api/login/google", (req, res) => {
+//   Yet to be set up...
+// })
+
+// app.get("/api/login/apple", (req, res) => {
+//   Yet to be set up...
+// })
 
 app.get("/api/logout", (req, res) => {
   if (req.isAuthenticated()) {
