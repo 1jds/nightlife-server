@@ -27,6 +27,7 @@ const allowedCorsOrigins = [
   "https://nightlife-8ddy.onrender.com/",
   "https://github.com",
   "https://github.com/",
+  "*",
 ];
 app.use(
   cors({
