@@ -4,8 +4,6 @@ const fs = require("fs");
 const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
-const JwtStrategy = require("passport-jwt").Strategy;
-const ExtractJwt = require("passport-jwt").ExtractJwt;
 const GitHubStrategy = require("passport-github2").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const AppleStrategy = require("passport-apple").Strategy;
@@ -60,50 +58,7 @@ pool.connect((err, client, done) => {
 // -----------  PASSPORT STRATEGIES  ----------- //
 // --------------------------------------------- //
 
-// const options = {
-//   // options for JWT Strategy
-//   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-//   secretOrKey: "dummy test key",
-//   // algorithms: ["RS256"],
-// };
-
-// passport.use(
-//   new JwtStrategy(options, (jwt_payload, done) => {
-//     console.log(jwt_payload);
-
-//     // Query the PostgreSQL database to find a user by username
-//     pool.query(
-//       "SELECT * FROM users WHERE username = $1",
-//       [jwt_payload.username],
-//       (err, result) => {
-//         console.log(`User ${jwt_payload.username} attempted to log in.`);
-//         if (err) {
-//           return done(err);
-//         }
-//         // Check if the user exists
-//         const user = result.rows[0];
-//         console.log(
-//           "The user details while authenticating jwt strategy are... :",
-//           user
-//         );
-//         if (!user) {
-//           return done(null, false);
-//         }
-//         // Check if the password is correct
-//         if (!bcrypt.compareSync(jwt_payload.password, user.password_hash)) {
-//           return done(null, false);
-//         }
-//         // If the username and password are correct, return the user
-//         console.log(
-//           "In the jwt strategy middleware, and everything looks good... Here is the user that we're passing on.... :",
-//           user
-//         );
-//         return done(null, user);
-//       }
-//     );
-//   })
-// );
-
+// ---------- Local Strategy ---------- //
 passport.use(
   "local",
   new LocalStrategy((username, password, done) => {
@@ -140,6 +95,40 @@ passport.use(
   })
 );
 
+// ---------- GitHub Strategy ---------- //
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and GitHub
+//   profile), and invoke a callback with a user object.
+passport.use(
+  "github",
+  new GitHubStrategy(
+    {
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL: "https://nightlife-8ddy.onrender.com",
+    },
+    async function (accessToken, refreshToken, profile, done) {
+      console.log(
+        "what does the profile returned for the GitHub strategy look like?",
+        profile
+      );
+      // Query the PostgreSQL database to find a user by username.
+      // Of course, this will not link to an already existing user account in the
+      // database, unless the user has used the same username in both places.
+      const userDbObj = await pool.query(
+        "SELECT * FROM users WHERE username = $1",
+        [profile.username]
+      );
+      if (!userDbObj.rows[0]) {
+        const dbUser = insertNewUserIntoDb(profile.username, profile.username);
+        return done(null, dbUser);
+      }
+      return done(null, userDbObj);
+    }
+  )
+);
+
+// SWITCH THIS BACK AGAIN TO USING JUST THE USER ID FROM THE DB AT A LATER STAGE...
 // passport.serializeUser((user, done) => {
 //   done(null, user.user_id);
 // });
@@ -279,20 +268,12 @@ app.post("/api/register", (req, res) => {
       }
     }
   );
-
-  const hashed_password = bcrypt.hashSync(password, 12);
-  pool.query(
-    "INSERT INTO users (username, password_hash) VALUES ($1, $2)",
-    [username, hashed_password],
-    (err, result) => {
-      if (err) {
-        console.error("Error inserting user into the database", err);
-        return res.status(500).json({ error: "Internal server error" });
-      } else {
-        return res.status(201).json({ message: "User created successfully" });
-      }
-    }
-  );
+  const dbUser = insertNewUserIntoDb(username, password);
+  if (dbUser) {
+    return res.status(201).json({ message: "User created successfully" });
+  } else {
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.post("/api/login", passport.authenticate("local"), (req, res) => {
@@ -315,12 +296,28 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
       }
     });
   }
+});
 
-  // return res.json({
-  //   loginSuccessful: true,
-  //   userId: req.user.user_id,
-  //   username: req.user.username,
-  // });
+app.post("/api/login/github", passport.authenticate("github"), (req, res) => {
+  if (!req.isAuthenticated()) {
+    console.log("Login failed at /api/login/github");
+    return res.json({ currentlyLoggedIn: false });
+  } else {
+    console.log("A successful login occurred.");
+    // Call our helper function for getting a list of venues the user is attending
+    getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
+      if (err) {
+        return res.json({ err });
+      } else {
+        return res.json({
+          loginSuccessful: true,
+          userId: req.user.user_id,
+          username: req.user.username,
+          venuesAttendingIds,
+        });
+      }
+    });
+  }
 });
 
 app.get("/api/logout", (req, res) => {
@@ -631,6 +628,22 @@ app.post("/api/yelp-data/:location", async (req, res) => {
 // --------------------------------------------- //
 // -------------  HELPER FUNCTIONS  ------------ //
 // --------------------------------------------- //
+
+// Helper function to insert a new user into the database
+function insertNewUserIntoDb(username, password) {
+  const hashed_password = bcrypt.hashSync(password, 12);
+  pool.query(
+    "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *",
+    [username, hashed_password],
+    (err, result) => {
+      if (err) {
+        console.error("Error inserting user into the database", err);
+      } else {
+        return result;
+      }
+    }
+  );
+}
 
 // Helper function to get a list of all of the venues a given user is attending
 function getVenuesAttendingIds(userId, callback) {
