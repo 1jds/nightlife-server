@@ -22,16 +22,15 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
-// const allowedCorsOrigins = [
-//   "https://nightlife-8ddy.onrender.com",
-//   "https://nightlife-8ddy.onrender.com/",
-//   "https://github.com",
-//   "https://github.com/",
-//   "*",
-// ];
+const allowedCorsOrigins = [
+  "https://nightlife-8ddy.onrender.com",
+  "https://nightlife-8ddy.onrender.com/",
+  "https://github.com",
+  "https://github.com/",
+];
 app.use(
   cors({
-    origin: "*",
+    origin: allowedCorsOrigins,
     credentials: true,
     "Access-Control-Allow-Credentials": true,
   })
@@ -112,7 +111,8 @@ passport.use(
     {
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: "https://nightlife-8ddy.onrender.com",
+      callbackURL:
+        "https://nightlife-8ddy.onrender.com/api/login/github/callback",
     },
     async function (accessToken, refreshToken, profile, done) {
       console.log(
