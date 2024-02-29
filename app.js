@@ -22,19 +22,19 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
-const allowedCorsOrigins = [
-  "https://nightlife-8ddy.onrender.com",
-  "https://nightlife-8ddy.onrender.com/",
-  "https://github.com",
-  "https://github.com/",
-];
-app.use(
-  cors({
-    origin: allowedCorsOrigins,
-    credentials: true,
-    "Access-Control-Allow-Credentials": true,
-  })
-);
+// const allowedCorsOrigins = [
+//   "https://nightlife-8ddy.onrender.com",
+//   "https://nightlife-8ddy.onrender.com/",
+//   "https://github.com",
+//   "https://github.com/",
+// ];
+// app.use(
+//   cors({
+//     origin: allowedCorsOrigins,
+//     credentials: true,
+//     "Access-Control-Allow-Credentials": true,
+//   })
+// );
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Probably won't use this, bust just in case...
 app.use(cookieParser()); // maybe don't need for JWT
