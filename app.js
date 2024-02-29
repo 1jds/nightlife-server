@@ -210,8 +210,8 @@ app.get("/api/current-session", (req, res) => {
         );
         return res.json({
           currentlyLoggedIn: true,
-          userId: req.user.user_id,
-          username: req.user.username,
+          userId: req.user.user_id || req.user.rows[0].user_id,
+          username: req.user.username || req.user.rows[0].username,
           venuesAttendingIds,
         });
       }
