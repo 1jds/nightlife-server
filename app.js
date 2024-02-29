@@ -23,22 +23,15 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
 const allowedCorsOrigins = [
-  /^https:\/\/github\.com.*/,
-  /^https:\/\/nightlife-8ddy\.onrender\.com.*/,
+  /github\.com/,
+  /nightlife-8ddy\.onrender\.com/,
   // "https://nightlife-8ddy.onrender.com",
   // "https://nightlife-8ddy.onrender.com/",
   // "https://github.com",
-  // "https://github.com/"
 ];
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (allowedCorsOrigins.indexOf(origin) !== -1 || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS..."));
-      }
-    },
+    origin: allowedCorsOrigins,
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     preflightContinue: false,
     credentials: true,
