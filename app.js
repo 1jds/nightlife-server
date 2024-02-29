@@ -127,6 +127,10 @@ passport.use(
         [profile.username]
       );
       if (!userDbObj.rows[0]) {
+        console.log(
+          "This is what the userDbObj looks like before return done... :",
+          userDbObj
+        );
         const dbUser = insertNewUserIntoDb(profile.username, profile.username);
         return done(null, dbUser);
       }
@@ -200,6 +204,10 @@ app.get("/api/current-session", (req, res) => {
       if (err) {
         return res.json({ err });
       } else {
+        console.log(
+          "Here is the req.user at /api/current-session... : ",
+          req.user
+        );
         return res.json({
           currentlyLoggedIn: true,
           userId: req.user.user_id,
