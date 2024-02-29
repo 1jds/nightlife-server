@@ -23,7 +23,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
 const allowedCorsOrigins = [
-  /^https:\/\/github\.com.*/
+  /^https:\/\/github\.com.*/,
   /^https:\/\/nightlife-8ddy\.onrender\.com.*/,
   // "https://nightlife-8ddy.onrender.com",
   // "https://nightlife-8ddy.onrender.com/",
