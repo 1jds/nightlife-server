@@ -592,9 +592,10 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [yelpId]
     );
+    console.log(venue_id);
     const attendingCount = await pool.query(
       "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
-      [venue_id]
+      [venue_id.venue_id]
     );
     return res.json({
       countAttendeesSuccessful: true,
@@ -607,7 +608,7 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
     );
     return res.json({
       countAttendeesSuccessful: false,
-      error: err,
+      error: error,
     });
   }
 });
