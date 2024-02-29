@@ -595,7 +595,7 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
     console.log(venue_id);
     const attendingCount = await pool.query(
       "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
-      [venue_id.venue_id]
+      [venue_id.rows[0].count]
     );
     return res.json({
       countAttendeesSuccessful: true,
