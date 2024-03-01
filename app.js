@@ -1,12 +1,8 @@
 const express = require("express");
-const path = require("path");
-const fs = require("fs");
 const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const AppleStrategy = require("passport-apple").Strategy;
 const bcrypt = require("bcrypt");
 const fetch = require("node-fetch");
 const cors = require("cors");
@@ -18,14 +14,14 @@ const pgSession = require("connect-pg-simple")(session);
 // -------------  GENERAL SETUP  --------------- //
 // --------------------------------------------- //
 require("dotenv").config();
-
 const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YELP_API_KEY;
-// ------------------- CORS ------------------- //
+
+// -------- CORS -------- //
 const acceptedOrigins = [
-  /^https:\/\/github\.com.*/,
   /^https:\/\/nightlife-8ddy\.onrender\.com.*/,
+  /^https:\/\/github\.com.*/,
 ];
 app.use(
   cors({
@@ -38,7 +34,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Probably won't use this...
 app.use(cookieParser());
-
+// ----- TO SERVE THE REACT FRONT-END ----- //
 app.use(express.static("dist"));
 
 // --------------------------------------------- //
@@ -73,16 +69,11 @@ passport.use(
       "SELECT * FROM users WHERE username = $1",
       [username],
       (err, result) => {
-        console.log(`User ${username} attempted to log in.`);
         if (err) {
           return done(err);
         }
         // Check if the user exists
         const user = result.rows[0];
-        console.log(
-          "The user details while authenticating local strategy are... :",
-          user
-        );
         if (!user) {
           return done(null, false);
         }
@@ -91,10 +82,6 @@ passport.use(
           return done(null, false);
         }
         // If the username and password are correct, return the user
-        console.log(
-          "In the local strategy middleware, and everything looks good... Here is the user that we're passing on.... :",
-          user
-        );
         return done(null, user);
       }
     );
@@ -102,9 +89,6 @@ passport.use(
 );
 
 // ---------- GitHub Strategy ---------- //
-//   Strategies in Passport require a `verify` function, which accept
-//   credentials (in this case, an accessToken, refreshToken, and GitHub
-//   profile), and invoke a callback with a user object.
 passport.use(
   "github",
   new GitHubStrategy(
@@ -115,10 +99,6 @@ passport.use(
         "https://nightlife-8ddy.onrender.com/api/login/github/callback",
     },
     async function (accessToken, refreshToken, profile, done) {
-      console.log(
-        "what does the profile returned for the GitHub strategy look like?",
-        profile
-      );
       // Query the PostgreSQL database to find a user by username.
       // Of course, this will not link to an already existing user account in the
       // database, unless the user has used the same username in both places.
@@ -127,10 +107,6 @@ passport.use(
         [profile.username]
       );
       if (!userDbObj.rows[0]) {
-        console.log(
-          "This is what the userDbObj looks like before return done... :",
-          userDbObj
-        );
         const dbUser = insertNewUserIntoDb(profile.username, profile.username);
         return done(null, dbUser);
       }
@@ -139,27 +115,10 @@ passport.use(
   )
 );
 
-// SWITCH THIS BACK AGAIN TO USING JUST THE USER ID FROM THE DB AT A LATER STAGE...
-// passport.serializeUser((user, done) => {
-//   done(null, user.user_id);
-// });
-
-// passport.deserializeUser((id, done) => {
-//   pool.query("SELECT * FROM users WHERE user_id = $1", [id], (err, result) => {
-//     if (err) {
-//       return done(err);
-//     }
-//     const user = result.rows[0];
-//     return done(null, user);
-//   });
-// });
-
 passport.serializeUser((user, done) => {
-  console.log(".......... serializeUser was invoked .............");
   done(null, user);
 });
 passport.deserializeUser((user, done) => {
-  console.log(".......... DE deserializeUser was invoked .............");
   done(null, user);
 });
 
@@ -178,8 +137,6 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days session timeout
-      // domain: "https://nightlifeapp.onrender.com", // delete?
-      // secure: true, // delete?
     },
   })
 );
@@ -191,10 +148,6 @@ app.use(passport.session());
 // -----------------  ROUTING  ----------------- //
 // --------------------------------------------- //
 
-// app.get("/", (req, res) => {
-//   res.json({message: "Welcome to the nightlife server!"});
-// });
-
 app.get("/api/current-session", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.json({ currentlyLoggedIn: false });
@@ -204,10 +157,6 @@ app.get("/api/current-session", (req, res) => {
       if (err) {
         return res.json({ err });
       } else {
-        console.log(
-          "Here is the req.user at /api/current-session... : ",
-          req.user
-        );
         return res.json({
           currentlyLoggedIn: true,
           userId: req.user.user_id || req.user.rows[0].user_id,
@@ -219,50 +168,7 @@ app.get("/api/current-session", (req, res) => {
   }
 });
 
-// app.get(
-//   "/api/current-session",
-//   passport.authenticate("session"),
-//   (req, res) => {
-//     // console.log(
-//     //   "Here is the req.session for /current-session......... :",
-//     //   req.session,
-//     //   "Here is the req.session.passport for /current-session......... :",
-//     //   req.session.passport
-//     // );
-//     if (req.isAuthenticated()) {
-//       console.log("At GET /current-session... Yes, indeed!");
-//     } else {
-//       console.log("At GET /current-session... No, not at all!");
-//     }
-
-//     if (!req.user) {
-//       res.json({ currentlyLoggedIn: false });
-//     } else {
-//       pool.query(
-//         "SELECT venue_yelp_id FROM venues JOIN users_venues ON venues.venue_id = users_venues.venue_id WHERE users_venues.user_id = $1",
-//         [req.user.user_id],
-//         (err, result) => {
-//           if (err) {
-//             return res.json({err});
-//           } else {
-//             console.log("The result from the query... : ", result);
-//             console.log("The type of the result : ", typeof result);
-//             console.log("The rows from the query... : ", result.rows);
-//             return res.json({
-//               currentlyLoggedIn: true,
-//               userId: req.user.user_id,
-//               username: req.user.username,
-//               venuesAttendingIds: result?.rows,
-//             });
-//           }
-//         }
-//       );
-//     }
-//   }
-// );
-
 app.post("/api/register", (req, res) => {
-  console.log("At POST to /register here is the req.body ..... : ", req.body);
   const { username, password } = req.body;
   if (!username || !password) {
     return res
@@ -293,10 +199,8 @@ app.post("/api/register", (req, res) => {
 
 app.post("/api/login", passport.authenticate("local"), (req, res) => {
   if (!req.isAuthenticated()) {
-    console.log("Login failed at /api/login");
     return res.json({ currentlyLoggedIn: false });
   } else {
-    console.log("A successful login occurred.");
     // Call our helper function for getting a list of venues the user is attending
     getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
       if (err) {
@@ -313,28 +217,6 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
   }
 });
 
-// app.get("/api/login/github", passport.authenticate("github"), (req, res) => {
-//   if (!req.isAuthenticated()) {
-//     console.log("Login failed at /api/login/github");
-//     return res.json({ currentlyLoggedIn: false });
-//   } else {
-//     console.log("A successful login occurred.");
-//     // Call our helper function for getting a list of venues the user is attending
-//     getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
-//       if (err) {
-//         return res.json({ err });
-//       } else {
-//         return res.json({
-//           loginSuccessful: true,
-//           userId: req.user.user_id,
-//           username: req.user.username,
-//           venuesAttendingIds,
-//         });
-//       }
-//     });
-//   }
-// });
-
 app.get(
   "/api/login/github",
   passport.authenticate("github", { scope: ["read:user"] })
@@ -345,57 +227,10 @@ app.get(
   passport.authenticate("github", { failureRedirect: "/" }),
   (req, res) => {
     res.redirect("/");
-    // if (!req.isAuthenticated()) {
-    //   console.log("Login failed at /api/login/github");
-    //   return res.json({ currentlyLoggedIn: false });
-    // } else {
-    //   console.log("A successful login occurred.");
-    //   // Call our helper function for getting a list of venues the user is attending
-    //   getVenuesAttendingIds(req.user.user_id, (err, venuesAttendingIds) => {
-    //     if (err) {
-    //       return res.json({ err });
-    //     } else {
-    //       return res.json({
-    //         loginSuccessful: true,
-    //         userId: req.user.user_id,
-    //         username: req.user.username,
-    //         venuesAttendingIds,
-    //       });
-    //     }
-    //   });
-    // }
   }
 );
 
-// app.get(
-//   "/auth/github",
-//   passport.authenticate("github", { scope: ["user:email"] })
-// );
-
-// app.get(
-//   "/auth/github/callback",
-//   passport.authenticate("github", { failureRedirect: "/login" }),
-//   function (req, res) {
-//     // Successful authentication, redirect home.
-//     res.redirect("/");
-//   }
-// );
-
-// app.get("/api/login/google", (req, res) => {
-//   Yet to be set up...
-// })
-
-// app.get("/api/login/apple", (req, res) => {
-//   Yet to be set up...
-// })
-
 app.get("/api/logout", (req, res) => {
-  if (req.isAuthenticated()) {
-    console.log("At GET /logout... Yes, indeed!");
-  } else {
-    console.log("At GET /logout... No, not at all!");
-  }
-
   req.logout((err) => {
     if (err) {
       return next(err);
@@ -405,79 +240,8 @@ app.get("/api/logout", (req, res) => {
   });
 });
 
-// app.get("/api/users", (req, res) => {
-//   if (req.isAuthenticated()) {
-//     console.log("At GET /users... Yes, indeed!");
-//   } else {
-//     console.log("At GET /users... No, not at all!");
-//   }
-
-//   // Use COUNT() to get the total number of users
-//   pool.query(
-//     "SELECT COUNT(*) as total_users FROM users; SELECT * FROM users;",
-//     (err, result) => {
-//       if (err) {
-//         console.error("Error executing SQL query", err);
-//         res.status(500).json({ error: "Internal server error" });
-//       } else {
-//         // Extract the count from the first query result
-//         const totalUsers = result[0].rows[0].total_users;
-
-//         // Extract user data from the second query result
-//         const users = result[1].rows;
-
-//         // Create a response object with both the count and user data
-//         const response = {
-//           total_users: totalUsers,
-//           users: users,
-//         };
-
-//         return res.json(response);
-//       }
-//     }
-//   );
-// });
-
-// app.put("/api/users/:id", (req, res) => {
-//   const userId = req.params.id;
-//   const { username, password } = req.body;
-
-//   if (!username || !password) {
-//     return res
-//       .status(400)
-//       .json({ error: "Both username and password are required" });
-//   }
-
-//   pool.query(
-//     "UPDATE users SET username = $1, password = $2 WHERE id = $3",
-//     [username, password, userId],
-//     (err, result) => {
-//       if (err) {
-//         console.error("Error updating user in the database", err);
-//         res.status(500).json({ error: "Internal server error" });
-//       } else {
-//         res.json({ message: "User updated successfully" });
-//       }
-//     }
-//   );
-// });
-
-// app.delete("/api/users/:id", (req, res) => {
-//   const userId = req.params.id;
-
-//   pool.query("DELETE FROM users WHERE id = $1", [userId], (err, result) => {
-//     if (err) {
-//       console.error("Error deleting user from the database", err);
-//       res.status(500).json({ error: "Internal server error" });
-//     } else {
-//       res.json({ message: "User deleted successfully" });
-//     }
-//   });
-// });
-
 app.post("/api/venues-attending", async (req, res) => {
   if (!req.isAuthenticated()) {
-    console.log("At POST /venues-attending... Not authenticated");
     res.json({
       message: "Please login before attempting to access this route.",
     });
@@ -534,7 +298,6 @@ app.post("/api/venues-attending", async (req, res) => {
 
 app.post("/api/venue-remove", async (req, res) => {
   if (!req.isAuthenticated()) {
-    console.log("At POST /venues-attending/remove... Not authenticated");
     res.json({
       message: "Please login before attempting to access this route.",
     });
@@ -582,13 +345,11 @@ app.post("/api/venue-remove", async (req, res) => {
 
 app.get("/api/number-attending/:yelpId", async (req, res) => {
   if (!req.isAuthenticated()) {
-    console.log("At GET /number-attending... Not authenticated");
     res.json({
       message: "Please login before attempting to access this route.",
     });
   }
   const yelpId = req.params.yelpId;
-  console.log("HERE IS THE yelpId I'm interested in... :", yelpId);
 
   const client = await pool.connect();
   try {
@@ -597,11 +358,6 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [yelpId]
     );
-    console.log(
-      "HERE IS THE RESULTS VALUE I'M INTERESTED IN... venue_id",
-      result
-    );
-    // return res.json({ venue_id });
     const attendingCount = await client.query(
       "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
       [result.rows[0].venue_id]
@@ -626,15 +382,8 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
   }
 });
 
-// ------ YELP calls ------
+// ------ Yelp API calls ------ //
 app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
-  console.log("What does the req.params object looks like? ... : ", req.params);
-  console.log(
-    "What kind of req.params are coming through at /api/get-venues-attending/:venueYelpId... : ",
-    req.params.venueYelpId
-  );
-  console.log("What is the typeof()?... : ", typeof req.params.venueYelpId);
-
   const url = `https://api.yelp.com/v3/businesses/${req.params.venueYelpId}`;
   const options = {
     method: "GET",
@@ -649,7 +398,6 @@ app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    console.log("Data received... : ", data);
     return res.json(data);
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -659,10 +407,6 @@ app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
 
 app.post("/api/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
-  console.log(
-    "At POST to /yelp-data/:location here is the req.body ..... : ",
-    req.body
-  );
   const { searchOffset, searchIsOpenNow, searchSortBy, searchPrice } = req.body;
   let updatedSearchPrice;
   switch (searchPrice) {
