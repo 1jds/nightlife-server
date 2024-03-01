@@ -581,12 +581,13 @@ app.post("/api/venue-remove", async (req, res) => {
 
 app.get("/api/number-attending/:yelpId", async (req, res) => {
   if (!req.isAuthenticated()) {
-    console.log("At POST /number-attending... Not authenticated");
+    console.log("At GET /number-attending... Not authenticated");
     res.json({
       message: "Please login before attempting to access this route.",
     });
   }
   const yelpId = req.params.yelpId;
+  console.log("HERE IS THE yelpId I'm interested in... :", yelpId);
   try {
     const venue_id = await pool.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
