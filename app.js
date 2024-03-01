@@ -551,6 +551,7 @@ app.post("/api/venue-remove", async (req, res) => {
 
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
     const receivedVenueDbId = await client.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [receivedVenueYelpId]
@@ -588,8 +589,11 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
   }
   const yelpId = req.params.yelpId;
   console.log("HERE IS THE yelpId I'm interested in... :", yelpId);
+
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
+    await client.query("BEGIN");
+    const result = await client.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [yelpId]
     );
@@ -598,15 +602,17 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
       result
     );
     // return res.json({ venue_id });
-    const attendingCount = await pool.query(
+    const attendingCount = await client.query(
       "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
       [result.rows[0].venue_id]
     );
+    await client.query("COMMIT");
     return res.json({
       countAttendeesSuccessful: true,
       attendingCount: attendingCount.rows[0].count || 0,
     });
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error(
       "Error counting venue attendees at /api/number-attending... :",
       error.message
@@ -615,6 +621,8 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
       countAttendeesSuccessful: false,
       error: error,
     });
+  } finally {
+    client.release();
   }
 });
 
