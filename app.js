@@ -596,14 +596,15 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
       "HERE IS THE RESULTS VALUE I'M INTERESTED IN... venue_id",
       venue_id
     );
-    const attendingCount = await pool.query(
-      "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
-      [venue_id.rows[0].count]
-    );
-    return res.json({
-      countAttendeesSuccessful: true,
-      attendingCount,
-    });
+    return res.json({ venue_id });
+    // const attendingCount = await pool.query(
+    //   "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
+    //   [venue_id.rows[0]]
+    // );
+    // return res.json({
+    //   countAttendeesSuccessful: true,
+    //   attendingCount,
+    // });
   } catch (error) {
     console.error(
       "Error counting venue attendees at /api/number-attending... :",
