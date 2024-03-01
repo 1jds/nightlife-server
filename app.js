@@ -589,22 +589,22 @@ app.get("/api/number-attending/:yelpId", async (req, res) => {
   const yelpId = req.params.yelpId;
   console.log("HERE IS THE yelpId I'm interested in... :", yelpId);
   try {
-    const venue_id = await pool.query(
+    const result = await pool.query(
       "SELECT venue_id FROM venues WHERE venue_yelp_id = $1;",
       [yelpId]
     );
     console.log(
       "HERE IS THE RESULTS VALUE I'M INTERESTED IN... venue_id",
-      venue_id
+      result
     );
     // return res.json({ venue_id });
     const attendingCount = await pool.query(
       "SELECT COUNT(*) FROM users_venues WHERE venue_id = $1;",
-      [venue_id.rows[0].venue_id]
+      [result.rows[0].venue_id]
     );
     return res.json({
       countAttendeesSuccessful: true,
-      attendingCount,
+      attendingCount: attendingCount.rows[0].count || 0,
     });
   } catch (error) {
     console.error(
