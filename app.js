@@ -458,23 +458,17 @@ app.post("/api/yelp-data/:location", async (req, res) => {
 // Helper function to insert a new user into the database
 async function insertNewUserIntoDb(username, password) {
   const hashed_password = bcrypt.hashSync(password, 12);
-  pool.query(
-    "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *",
-    [username, hashed_password],
-    (err, result) => {
-      if (err) {
-        console.log("This fired #5");
-        console.error("Error inserting user into the database", err);
-      } else {
-        console.log("This fired #6");
-        console.log(
-          "I might need to return the rows[0] from this result?",
-          result
-        );
-        return result.rows[0];
-      }
-    }
-  );
+  try {
+    const result = await pool.query(
+      "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *",
+      [username, hashed_password]
+    );
+    console.log("This fired #6");
+    return result.rows[0];
+  } catch (error) {
+    console.log("This fired #5");
+    console.error("Error inserting user into the database", err);
+  }
 }
 
 // Helper function to get a list of all of the venues a given user is attending
