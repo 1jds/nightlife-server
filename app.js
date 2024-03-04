@@ -168,27 +168,19 @@ app.get("/api/current-session", (req, res) => {
   }
 });
 
-app.post("/api/register", (req, res) => {
+app.post("/api/register", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res
       .status(400)
       .json({ error: "Both username and password are required" });
   }
-  pool.query(
-    "SELECT * FROM users WHERE username = $1",
-    [username],
-    (err, result) => {
-      if (err) {
-        return res.json({ err });
-      } else {
-        const user = result.rows[0];
-        if (user) {
-          return res.json({ error: "Please select another username" });
-        }
-      }
-    }
-  );
+  const result = await pool.query("SELECT * FROM users WHERE username = $1;", [
+    username,
+  ]);
+  if (result.rows[0]) {
+    return res.json({ error: "Please select another username" });
+  }
   const dbUser = insertNewUserIntoDb(username, password);
   if (dbUser) {
     return res.status(201).json({ message: "User created successfully" });
@@ -434,7 +426,7 @@ app.post("/api/yelp-data/:location", async (req, res) => {
   try {
     const response = await fetch(url, options);
     if (response.status === 400) {
-      res.status(400).json({
+      return res.status(400).json({
         locationFound: false,
         message:
           "No venue information was found for that location, please try searching another locality.",
@@ -444,12 +436,11 @@ app.post("/api/yelp-data/:location", async (req, res) => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    res.json(data);
+    return res.json(data);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
-  return;
 });
 
 // --------------------------------------------- //
