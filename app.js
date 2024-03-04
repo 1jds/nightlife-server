@@ -174,7 +174,6 @@ app.get("/api/current-session", (req, res) => {
 app.post("/api/register", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
-    console.log("This fired #1");
     return res
       .status(400)
       .json({ error: "Both username and password are required" });
@@ -183,16 +182,13 @@ app.post("/api/register", async (req, res) => {
     username,
   ]);
   if (result.rows[0]) {
-    console.log("This fired #2");
     return res.json({ error: "Please select another username" });
   }
   const dbUser = await insertNewUserIntoDb(username, password);
   console.log(dbUser);
   if (dbUser) {
-    console.log("This fired #3");
     return res.status(201).json({ message: "User created successfully" });
   } else {
-    console.log("This fired #4");
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -463,10 +459,8 @@ async function insertNewUserIntoDb(username, password) {
       "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *",
       [username, hashed_password]
     );
-    console.log("This fired #6");
     return result.rows[0];
   } catch (error) {
-    console.log("This fired #5");
     console.error("Error inserting user into the database", err);
   }
 }
