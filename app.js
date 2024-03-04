@@ -464,7 +464,11 @@ function insertNewUserIntoDb(username, password) {
         console.error("Error inserting user into the database", err);
       } else {
         console.log("This fired #6");
-        return result;
+        console.log(
+          "I might need to return the rows[0] from this result?",
+          result
+        );
+        return result.rows[0];
       }
     }
   );
