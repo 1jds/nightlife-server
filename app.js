@@ -107,7 +107,10 @@ passport.use(
         [profile.username]
       );
       if (!userDbObj.rows[0]) {
-        const dbUser = insertNewUserIntoDb(profile.username, profile.username);
+        const dbUser = await insertNewUserIntoDb(
+          profile.username,
+          profile.username
+        );
         return done(null, dbUser);
       }
       return done(null, userDbObj);
@@ -183,7 +186,7 @@ app.post("/api/register", async (req, res) => {
     console.log("This fired #2");
     return res.json({ error: "Please select another username" });
   }
-  const dbUser = insertNewUserIntoDb(username, password);
+  const dbUser = await insertNewUserIntoDb(username, password);
   console.log(dbUser);
   if (dbUser) {
     console.log("This fired #3");
@@ -453,7 +456,7 @@ app.post("/api/yelp-data/:location", async (req, res) => {
 // --------------------------------------------- //
 
 // Helper function to insert a new user into the database
-function insertNewUserIntoDb(username, password) {
+async function insertNewUserIntoDb(username, password) {
   const hashed_password = bcrypt.hashSync(password, 12);
   pool.query(
     "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *",
