@@ -340,11 +340,6 @@ app.post("/api/venue-remove", async (req, res) => {
 });
 
 app.get("/api/number-attending/:yelpId", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    res.json({
-      message: "Please login before attempting to access this route.",
-    });
-  }
   const yelpId = req.params.yelpId;
 
   const client = await pool.connect();
