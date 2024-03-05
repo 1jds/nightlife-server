@@ -399,6 +399,12 @@ app.get("/api/get-venues-attending/:venueYelpId", async (req, res) => {
 app.post("/api/yelp-data/:location", async (req, res) => {
   let locationSearchTerm = req.params.location;
   const { searchOffset, searchIsOpenNow, searchSortBy, searchPrice } = req.body;
+  const isOpenNowBool =
+    searchIsOpenNow === "Open"
+      ? "true"
+      : searchIsOpenNow === "Closed"
+      ? "false"
+      : "";
   let updatedSearchPrice;
   switch (searchPrice) {
     case 1:
@@ -414,7 +420,7 @@ app.post("/api/yelp-data/:location", async (req, res) => {
       updatedSearchPrice = "&price=1&price=2&price=3&price=4";
   }
 
-  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}${updatedSearchPrice}&open_now=${searchIsOpenNow}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
+  const url = `https://api.yelp.com/v3/businesses/search?location=${locationSearchTerm}${updatedSearchPrice}&open_now=${isOpenNowBool}&sort_by=${searchSortBy}&limit=5&offset=${searchOffset}`;
   const options = {
     method: "GET",
     headers: {
