@@ -20,6 +20,8 @@ const API_KEY = process.env.YELP_API_KEY;
 
 // -------- CORS -------- //
 const acceptedOrigins = [
+  /^https:\/\/pleasant-worm-stockings\.cyclic\.app/,
+  /^https:\/\/nightlifeapp\.vercel\.app/,
   /^https:\/\/nightlife-8ddy\.onrender\.com.*/,
   /^https:\/\/github\.com.*/,
 ];
@@ -44,7 +46,7 @@ app.use(express.static("dist"));
 // Create a PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.ELEPHANTSQL_CONNECTION_URL,
-  max: 5,
+  max: 2,
 });
 
 // Test the database connection
@@ -407,13 +409,13 @@ app.post("/api/yelp-data/:location", async (req, res) => {
       : "";
   let updatedSearchPrice;
   switch (searchPrice) {
-    case 1:
+    case "1":
       updatedSearchPrice = "&price=1";
       break;
-    case 2:
+    case "2":
       updatedSearchPrice = "&price=1&price=2";
       break;
-    case 3:
+    case "3":
       updatedSearchPrice = "&price=1&price=2&price=3";
       break;
     default:
